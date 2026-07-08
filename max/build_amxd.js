@@ -2,7 +2,9 @@
  * build_amxd.js — wrap chord_markov_device.maxpat into a Max for Live
  * MIDI-Effect device (Chord Markov Device.amxd).
  *
- * Run from this folder:  node build_amxd.js
+ * Run from this folder:
+ *   node build_amxd.js                                  # main device
+ *   node build_amxd.js <input.maxpat> <output.amxd>     # any patch
  *
  * .amxd container format (the minimal variant Live also writes, e.g. as seen
  * in stock/3rd-party MIDI devices):
@@ -20,8 +22,9 @@ const fs = require("fs");
 const path = require("path");
 
 const DIR = __dirname;
-const SRC = path.join(DIR, "chord_markov_device.maxpat");
-const OUT = path.join(DIR, "Chord Markov Device.amxd");
+// Optional args: input .maxpat and output .amxd (names or paths).
+const SRC = path.resolve(DIR, process.argv[2] || "chord_markov_device.maxpat");
+const OUT = path.resolve(DIR, process.argv[3] || "Chord Markov Device.amxd");
 
 function u32(n) { const b = Buffer.alloc(4); b.writeUInt32LE(n >>> 0, 0); return b; }
 
