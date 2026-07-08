@@ -115,8 +115,16 @@ Max.addHandler("ping", () => {
   }
 });
 
-Max.addHandler("send", (chord) => {
-  const value = String(chord ?? "").trim();
+function chordFromArgs(args) {
+  const parts = args.map((a) => String(a ?? "").trim()).filter(Boolean);
+  if (parts.length > 1 && parts[0] === "text") {
+    return parts.slice(1).join(" ").trim();
+  }
+  return parts.join(" ").trim();
+}
+
+Max.addHandler("send", (...args) => {
+  const value = chordFromArgs(args);
   if (!value) {
     Max.outlet(["error", "empty chord input"]);
     return;
