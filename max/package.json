@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "description": "OSC bridge for Markov chord Max device",
+  "scripts": {
+    "test": "node chord_parser.test.js"
+  },
   "dependencies": {
     "node-osc": "^9.1.7"
   }
