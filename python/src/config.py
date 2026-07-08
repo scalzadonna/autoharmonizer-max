@@ -1,0 +1,130 @@
+"""Configuration and OSC protocol constants (v1)."""
+
+from __future__ import annotations
+
+import argparse
+import os
+from dataclasses import dataclass
+from pathlib import Path
+
+PROTOCOL_VERSION = "v1"
+
+# OSC addresses — keep in sync with PLAN.md and max/chord_markov_device.maxpat
+OSC_CHORD_INPUT = "/chord/input"
+OSC_CHORD_OUTPUT = "/chord/output"
+OSC_STATUS_READY = "/status/ready"
+OSC_STATUS_PONG = "/status/pong"
+OSC_ERROR = "/error"
+OSC_CONTROL_PING = "/control/ping"
+OSC_CONTROL_RELOAD = "/control/reload"
+OSC_DEBUG_PROBABILITY = "/debug/probability"
+OSC_DEBUG_CANDIDATES = "/debug/candidates"
+OSC_DEBUG_INPUT_ECHO = "/debug/input_echo"
+OSC_DEBUG_FALLBACK_USED = "/debug/fallback_used"
+
+FALLBACK_POLICIES = ("echo_input", "global_top", "random_source", "error_only")
+DEFAULT_FALLBACK = "echo_input"
+
+PROB_SUM_TOLERANCE = 0.01
+
+
+def repo_root() -> Path:
+    """Return project root (directory containing PLAN.md)."""
+    here = Path(__file__).resolve()
+    for parent in [here.parent, *here.parents]:
+        if (parent / "PLAN.md").exists():
+            return parent
+    return Path.cwd()
+
+
+def resolve_csv_path(path: str | Path) -> Path:
+    """Resolve CSV path relative to repo root when not found as given."""
+    candidate = Path(path)
+    if candidate.is_file():
+        return candidate.resolve()
+
+    from_root = repo_root() / path
+    if from_root.is_file():
+        return from_root.resolve()
+
+    raise FileNotFoundError(f"CSV file not found: {path}")
+
+
+def _env_bool(name: str) -> bool | None:
+    raw = os.environ.get(name)
+    if raw is None:
+        return None
+    return raw.lower() in {"1", "true", "yes", "on"}
+
+
+def _env_int(name: str) -> int | None:
+    raw = os.environ.get(name)
+    if raw is None or raw == "":
+        return None
+    return int(raw)
+
+
+@dataclass(frozen=True)
+class Settings:
+    csv_path: Path
+    host: str
+    port: int
+    max_host: str
+    max_port: int
+    fallback: str
+    debug: bool
+    seed: int | None
+
+
+def build_parser() -> argparse.ArgumentParser:
+    default_csv = str(repo_root() / "data" / "markov_openbook.csv")
+    parser = argparse.ArgumentParser(description="Markov chord OSC service")
+    parser.add_argument("--csv", default=default_csv, help="Path to transition CSV")
+    parser.add_argument("--host", default="127.0.0.1", help="Bind host")
+    parser.add_argument("--port", type=int, default=9000, help="Listen port")
+    parser.add_argument("--max-host", default="127.0.0.1", help="Max reply host")
+    parser.add_argument("--max-port", type=int, default=9001, help="Max reply port")
+    parser.add_argument(
+        "--fallback",
+        choices=FALLBACK_POLICIES,
+        default=DEFAULT_FALLBACK,
+        help="Unknown chord fallback policy",
+    )
+    parser.add_argument("--debug", action="store_true", help="Emit debug OSC messages")
+    parser.add_argument("--seed", type=int, default=None, help="Random seed for sampling")
+    return parser
+
+
+def load_settings(argv: list[str] | None = None) -> Settings:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
+    csv_path = resolve_csv_path(os.environ.get("MARKOV_CSV", args.csv))
+    host = os.environ.get("MARKOV_HOST", args.host)
+    port = _env_int("MARKOV_PORT") or args.port
+    max_host = os.environ.get("MARKOV_MAX_HOST", args.max_host)
+    max_port = _env_int("MARKOV_MAX_PORT") or args.max_port
+    fallback = os.environ.get("MARKOV_FALLBACK", args.fallback)
+    if fallback not in FALLBACK_POLICIES:
+        raise ValueError(f"Invalid fallback policy: {fallback}")
+
+    debug_env = _env_bool("MARKOV_DEBUG")
+    debug = debug_env if debug_env is not None else args.debug
+
+    seed = _env_int("MARKOV_SEED")
+    if seed is None:
+        seed = args.seed
+
+    if host != "127.0.0.1":
+        raise ValueError("v1 requires binding to 127.0.0.1 only")
+
+    return Settings(
+        csv_path=csv_path,
+        host=host,
+        port=port,
+        max_host=max_host,
+        max_port=max_port,
+        fallback=fallback,
+        debug=debug,
+        seed=seed,
+    )

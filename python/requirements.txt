@@ -1,0 +1,2 @@
+python-osc>=1.8.0
+pytest>=8.0.0
