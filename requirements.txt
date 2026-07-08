@@ -1,0 +1,9 @@
+# Runtime dependency for OSC streaming to a Max device.
+python-osc>=1.8
+
+# Note: the core Markov chain (loading the CSV, sampling, generating
+# progressions) uses only the Python standard library. python-osc is
+# imported lazily and is only needed when streaming with --osc.
+#
+# Tests use the built-in `unittest` module. Run them with:
+#     python3 -m unittest test_markov_chords -v
