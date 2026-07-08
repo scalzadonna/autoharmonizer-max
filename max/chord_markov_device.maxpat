@@ -9,7 +9,7 @@
 			"modernui" : 1
 		},
 		"classnamespace" : "box",
-		"rect" : [ 100.0, 100.0, 820.0, 520.0 ],
+		"rect" : [ 100.0, 100.0, 900.0, 520.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -23,8 +23,8 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 20.0, 420.0, 20.0 ],
-					"text" : "Markov Chord Device v1 — Node for Max OSC bridge (no CNMAT required)"
+					"patching_rect" : [ 30.0, 20.0, 460.0, 20.0 ],
+					"text" : "Markov Chord Device v1 — Node for Max OSC bridge"
 				}
 
 			}
@@ -34,8 +34,8 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 42.0, 420.0, 20.0 ],
-					"text" : "First time only: click npm install, then ping. Start Python service first."
+					"patching_rect" : [ 30.0, 42.0, 500.0, 20.0 ],
+					"text" : "Click the G:7 message box to edit chord. npm install once, then ping/send."
 				}
 
 			}
@@ -45,19 +45,18 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 30.0, 80.0, 80.0, 20.0 ],
-					"text" : "chord input"
+					"patching_rect" : [ 30.0, 80.0, 120.0, 20.0 ],
+					"text" : "chord (message box)"
 				}
 
 			}
 , 			{
 				"box" : 				{
 					"id" : "obj-input",
-					"maxclass" : "textedit",
-					"numinlets" : 1,
+					"maxclass" : "message",
+					"numinlets" : 2,
 					"numoutlets" : 1,
-					"outlettype" : [ "text" ],
-					"parameter_enable" : 0,
+					"outlettype" : [ "" ],
 					"patching_rect" : [ 30.0, 105.0, 120.0, 22.0 ],
 					"text" : "G:7"
 				}
@@ -117,6 +116,31 @@
 			}
 , 			{
 				"box" : 				{
+					"id" : "obj-btn-restart",
+					"maxclass" : "textbutton",
+					"numinlets" : 1,
+					"numoutlets" : 3,
+					"outlettype" : [ "", "", "" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 510.0, 105.0, 90.0, 22.0 ],
+					"text" : "restart js"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-prepend-chord",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 30.0, 145.0, 90.0, 22.0 ],
+					"text" : "prepend chord"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-msg-npm",
 					"maxclass" : "message",
 					"numinlets" : 2,
@@ -153,25 +177,25 @@
 			}
 , 			{
 				"box" : 				{
-					"id" : "obj-route-text",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
-					"numoutlets" : 2,
-					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 30.0, 140.0, 60.0, 22.0 ],
-					"text" : "route text"
+					"id" : "obj-msg-restart",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 510.0, 140.0, 70.0, 22.0 ],
+					"text" : "script stop"
 				}
 
 			}
 , 			{
 				"box" : 				{
-					"id" : "obj-prepend-send",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
+					"id" : "obj-msg-restart2",
+					"maxclass" : "message",
+					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 170.0, 80.0, 22.0 ],
-					"text" : "prepend send"
+					"patching_rect" : [ 510.0, 170.0, 70.0, 22.0 ],
+					"text" : "script start"
 				}
 
 			}
@@ -286,7 +310,7 @@
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 450.0, 315.0, 70.0, 22.0 ],
+					"patching_rect" : [ 580.0, 285.0, 70.0, 22.0 ],
 					"text" : "print status"
 				}
 
@@ -368,7 +392,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 250.0, 170.0, 35.0, 22.0 ],
+					"patching_rect" : [ 330.0, 140.0, 35.0, 22.0 ],
 					"text" : "init"
 				}
 
@@ -380,7 +404,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 580.0, 285.0, 55.0, 22.0 ],
+					"patching_rect" : [ 580.0, 255.0, 55.0, 22.0 ],
 					"text" : "waiting"
 				}
 
@@ -397,6 +421,34 @@
 				"patchline" : 				{
 					"destination" : [ "obj-node", 0 ],
 					"source" : [ "obj-msg-npm", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-msg-restart", 0 ],
+					"source" : [ "obj-btn-restart", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-node", 0 ],
+					"source" : [ "obj-msg-restart", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-msg-restart2", 0 ],
+					"source" : [ "obj-msg-restart", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-node", 0 ],
+					"source" : [ "obj-msg-restart2", 0 ]
 				}
 
 			}
@@ -437,22 +489,15 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-route-text", 0 ],
+					"destination" : [ "obj-prepend-chord", 0 ],
 					"source" : [ "obj-input", 0 ]
 				}
 
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-prepend-send", 0 ],
-					"source" : [ "obj-route-text", 1 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
 					"destination" : [ "obj-node", 0 ],
-					"source" : [ "obj-prepend-send", 0 ]
+					"source" : [ "obj-prepend-chord", 0 ]
 				}
 
 			}

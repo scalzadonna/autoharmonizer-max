@@ -92,6 +92,40 @@ function initOsc() {
   });
 }
 
+function chordFromArgs(...args) {
+  const parts = args.map((a) => String(a ?? "").trim()).filter(Boolean);
+  if (!parts.length) {
+    return "";
+  }
+  if (parts[0] === "text") {
+    return parts.slice(1).join(" ").trim();
+  }
+  if (parts.length === 1 && parts[0] === "text") {
+    return "";
+  }
+  return parts.join(" ").trim();
+}
+
+function sendChord(...args) {
+  const value = chordFromArgs(...args);
+  if (!value) {
+    Max.outlet(["error", "empty chord input"]);
+    return;
+  }
+
+  Max.post(`sending chord: ${value}`);
+
+  try {
+    initOsc();
+    startReplyTimeout();
+    sendOsc("/chord/input", value);
+  } catch (err) {
+    clearReplyTimeout();
+    Max.post(err.stack || err);
+    Max.outlet(["error", String(err.message || err)]);
+  }
+}
+
 Max.addHandler("init", () => {
   try {
     initOsc();
@@ -115,30 +149,12 @@ Max.addHandler("ping", () => {
   }
 });
 
-function chordFromArgs(args) {
-  const parts = args.map((a) => String(a ?? "").trim()).filter(Boolean);
-  if (parts.length > 1 && parts[0] === "text") {
-    return parts.slice(1).join(" ").trim();
-  }
-  return parts.join(" ").trim();
-}
+Max.addHandler("chord", (...args) => {
+  sendChord(...args);
+});
 
 Max.addHandler("send", (...args) => {
-  const value = chordFromArgs(args);
-  if (!value) {
-    Max.outlet(["error", "empty chord input"]);
-    return;
-  }
-
-  try {
-    initOsc();
-    startReplyTimeout();
-    sendOsc("/chord/input", value);
-  } catch (err) {
-    clearReplyTimeout();
-    Max.post(err.stack || err);
-    Max.outlet(["error", String(err.message || err)]);
-  }
+  sendChord(...args);
 });
 
 Max.addHandler("reload", () => {

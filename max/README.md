@@ -40,8 +40,9 @@ npm install
 ### 4. Ping and send
 
 1. Click **ping** — status should show `ready` when Python replies.
-2. Enter a chord (e.g. `G:7`) and click **send**.
-3. The sampled next chord appears in **output**.
+2. Click the **G:7 message box** to edit the chord (do not use textedit — it sends a `text` prefix that breaks routing).
+3. Click **send** — the sampled next chord appears in **output**.
+4. After updating `markov_osc.js`, click **restart js** before testing again.
 
 Click **reload** to reload the CSV without restarting Python.
 
