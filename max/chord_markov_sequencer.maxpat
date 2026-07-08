@@ -1450,6 +1450,21 @@
 						150,
 						22
 					],
+					"items": [
+						"whole_bar",
+						",",
+						"half_half",
+						",",
+						"four_quarters",
+						",",
+						"half_qtr_qtr",
+						",",
+						"qtr_qtr_half",
+						",",
+						"qtr_half_qtr",
+						",",
+						"static_2bar"
+					],
 					"presentation": 1,
 					"presentation_rect": [
 						96,
@@ -1497,20 +1512,20 @@
 			},
 			{
 				"box": {
-					"id": "obj-seq-menu-items",
-					"maxclass": "message",
-					"numinlets": 2,
+					"id": "obj-seq-load-menu",
+					"maxclass": "newobj",
+					"numinlets": 1,
 					"numoutlets": 1,
-					"outlettype": [
-						""
-					],
 					"patching_rect": [
 						1140,
 						190,
-						470,
+						90,
 						22
 					],
-					"text": "clear, append whole_bar, append half_half, append four_quarters, append half_qtr_qtr, append qtr_qtr_half, append qtr_half_qtr, append static_2bar, set 2"
+					"text": "loadmess 2",
+					"outlettype": [
+						""
+					]
 				}
 			},
 			{
@@ -2642,23 +2657,11 @@
 			{
 				"patchline": {
 					"destination": [
-						"obj-seq-menu-items",
-						0
-					],
-					"source": [
-						"obj-loadbang",
-						0
-					]
-				}
-			},
-			{
-				"patchline": {
-					"destination": [
 						"obj-seq-menu",
 						0
 					],
 					"source": [
-						"obj-seq-menu-items",
+						"obj-seq-load-menu",
 						0
 					]
 				}
