@@ -18,6 +18,10 @@
  * always shows the full symbol the Markov system returned (e.g. Cmaj7); the
  * `notes` are the reduced major/minor triad (C E G). Toggle with `triadsonly`.
  *
+ * MIDI input: a `notein <pitch>` message (from Ableton via midiin/midiparse)
+ * seeds the chain — the played note becomes a major-triad root symbol and is
+ * submitted just like a typed chord, so the sonified chord is the Markov reply.
+ *
  * The returned chord that is sonified is ALWAYS the chord returned by the
  * Markov/Python system — never merely the chord the user typed. A separate,
  * clearly-labelled `testparse` handler exists for parser debugging only.
@@ -210,22 +214,30 @@ function chordFromArgs(args) {
   return parts.join(" ").trim();
 }
 
-Max.addHandler("send", (...args) => {
-  const value = chordFromArgs(args);
-  if (!value) {
+/**
+ * Send a chord symbol to the Python Markov service. Shared by the `send`
+ * button/Enter path and the MIDI-note-in path so both seed the chain the
+ * same way and the sonified chord is always the Markov reply.
+ */
+function submitChord(value) {
+  const v = String(value ?? "").trim();
+  if (!v) {
     Max.outlet(["error", "empty chord input"]);
     return;
   }
-
   try {
     initOsc();
     startReplyTimeout();
-    sendOsc("/chord/input", value);
+    sendOsc("/chord/input", v);
   } catch (err) {
     clearReplyTimeout();
     Max.post(err.stack || err);
     Max.outlet(["error", String(err.message || err)]);
   }
+}
+
+Max.addHandler("send", (...args) => {
+  submitChord(chordFromArgs(args));
 });
 
 Max.addHandler("reload", () => {
@@ -252,6 +264,23 @@ Max.addHandler("testparse", (...atoms) => {
     return;
   }
   sonifyChord(symbol, "test");
+});
+
+/**
+ * MIDI note-in from Ableton seeds the Markov chain. A played note's pitch
+ * class becomes a major-triad root symbol (e.g. 60 -> "C:maj", 66 -> "F#:maj")
+ * in the dataset's colon notation and is submitted exactly like a typed chord;
+ * the chord the Markov system returns is what gets voiced. Note-offs are
+ * filtered upstream by `stripnote`, but we double-guard on velocity 0 here.
+ */
+const ROOT_NAMES = ["C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+
+Max.addHandler("notein", (note, velocity) => {
+  const n = Number(note);
+  if (!Number.isFinite(n)) return;
+  if (velocity !== undefined && Number(velocity) === 0) return; // ignore note-offs
+  const pc = ((Math.round(n) % 12) + 12) % 12;
+  submitChord(ROOT_NAMES[pc] + ":maj");
 });
 
 /** Set the register centre used by the voicing engine (Max-side control). */

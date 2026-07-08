@@ -129,6 +129,18 @@ Ports are set in `markov_osc.js`. Change them there if you use non-default Pytho
 
 The OSC protocol to/from **Python is unchanged (v1)**.
 
+## MIDI input from Ableton
+
+The device also listens to the track's incoming MIDI. Play a note (keyboard or
+clip) and it **seeds the Markov chain**: the note's pitch class becomes a
+major-triad root symbol (e.g. C4 → `C:maj`, F#3 → `F#:maj`), which is sent to
+Python exactly like a typed chord — so the sonified triad is the chord the
+Markov system returns, not the raw note. Note-offs are ignored.
+
+Chain: `midiin → midiparse → unpack → stripnote → gate → prepend notein → node`.
+The **enable MIDI in** toggle (on by default) gates it; a M4L MIDI effect does
+not pass raw MIDI through, so played notes are replaced by the generated triad.
+
 ## Max for Live device (`.amxd`)
 
 `Chord Markov Device.amxd` is the same patch wrapped as a **Max MIDI Effect**

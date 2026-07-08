@@ -1254,6 +1254,173 @@
 					],
 					"text": "panic"
 				}
+			},
+			{
+				"box": {
+					"id": "obj-midiin-label",
+					"maxclass": "comment",
+					"numinlets": 1,
+					"numoutlets": 0,
+					"patching_rect": [
+						30,
+						500,
+						380,
+						20
+					],
+					"text": "MIDI in from Ableton: a played note seeds the Markov chain (enable →)"
+				}
+			},
+			{
+				"box": {
+					"id": "obj-midi-toggle",
+					"maxclass": "toggle",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"outlettype": [
+						"int"
+					],
+					"parameter_enable": 0,
+					"patching_rect": [
+						300,
+						498,
+						24,
+						24
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-load-midi",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"patching_rect": [
+						330,
+						500,
+						80,
+						22
+					],
+					"text": "loadmess 1",
+					"outlettype": [
+						""
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-midiin",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"patching_rect": [
+						30,
+						525,
+						55,
+						22
+					],
+					"text": "midiin",
+					"outlettype": [
+						"int"
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-midiparse",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 7,
+					"patching_rect": [
+						30,
+						555,
+						70,
+						22
+					],
+					"text": "midiparse",
+					"outlettype": [
+						"",
+						"",
+						"",
+						"",
+						"",
+						"",
+						""
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-unpack",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 2,
+					"patching_rect": [
+						30,
+						585,
+						70,
+						22
+					],
+					"text": "unpack 0 0",
+					"outlettype": [
+						"",
+						""
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-stripnote",
+					"maxclass": "newobj",
+					"numinlets": 2,
+					"numoutlets": 2,
+					"patching_rect": [
+						30,
+						615,
+						70,
+						22
+					],
+					"text": "stripnote",
+					"outlettype": [
+						"",
+						""
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-midi-gate",
+					"maxclass": "newobj",
+					"numinlets": 2,
+					"numoutlets": 1,
+					"patching_rect": [
+						30,
+						645,
+						50,
+						22
+					],
+					"text": "gate",
+					"outlettype": [
+						""
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-prepend-notein",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"patching_rect": [
+						30,
+						675,
+						120,
+						22
+					],
+					"text": "prepend notein",
+					"outlettype": [
+						""
+					]
+				}
 			}
 		],
 		"lines": [
@@ -1949,6 +2116,114 @@
 					],
 					"source": [
 						"obj-panic",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-midiparse",
+						0
+					],
+					"source": [
+						"obj-midiin",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-unpack",
+						0
+					],
+					"source": [
+						"obj-midiparse",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-stripnote",
+						0
+					],
+					"source": [
+						"obj-unpack",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-stripnote",
+						1
+					],
+					"source": [
+						"obj-unpack",
+						1
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-midi-gate",
+						1
+					],
+					"source": [
+						"obj-stripnote",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-midi-gate",
+						0
+					],
+					"source": [
+						"obj-midi-toggle",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-midi-toggle",
+						0
+					],
+					"source": [
+						"obj-load-midi",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-prepend-notein",
+						0
+					],
+					"source": [
+						"obj-midi-gate",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-node",
+						0
+					],
+					"source": [
+						"obj-prepend-notein",
 						0
 					]
 				}
