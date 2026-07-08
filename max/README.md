@@ -129,6 +129,38 @@ Ports are set in `markov_osc.js`. Change them there if you use non-default Pytho
 
 The OSC protocol to/from **Python is unchanged (v1)**.
 
+## Sequencer device (`Chord Markov Sequencer.amxd`)
+
+A separate device with a **usable Max for Live presentation UI** that **plays
+along the Markov chain automatically** for a set length, using harmonic-rhythm
+templates.
+
+How it works: each chord slot plays the current chord (as a triad) and feeds it
+back into `/chord/input`; the Markov reply becomes the **next** slot's chord
+(output → input). A transport-synced `metro 4n` (quarter-note, follows Live's
+tempo) drives the clock; chords change at the template's slot onsets and sustain
+until the next. After the set number of bars it stops and flushes all notes.
+
+**Presentation controls:** `seed` chord + **send**, **PLAY** toggle, **template**
+(1–7), **length** (bars), plus `chord` / `notes` / `status` displays.
+
+**Harmonic-rhythm templates** (slot onsets in beats, 4/4):
+
+| # | name | span | chords change on beats |
+|---|---|---|---|
+| 1 | whole_bar | 1 bar | 0 |
+| 2 | half_half | 1 bar | 0, 2 |
+| 3 | four_quarters | 1 bar | 0, 1, 2, 3 |
+| 4 | half_qtr_qtr | 1 bar | 0, 2, 3 |
+| 5 | qtr_qtr_half | 1 bar | 0, 1, 2 |
+| 6 | qtr_half_qtr | 1 bar | 0, 1, 3 |
+| 7 | static_2bar | 2 bars | 0 |
+
+**Use:** start Python; add the device to a MIDI track with an instrument after
+it; type a seed chord + **send**; pick a template and length; press **PLAY**.
+Node messages: `play 1|0`, `beat`, `template <1-7>`, `length <bars>`, `seed <chord>`
+in; `playoff` out (stops the transport when the length completes).
+
 ## MIDI input from Ableton
 
 The device also listens to the track's incoming MIDI. Play a note (keyboard or

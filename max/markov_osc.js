@@ -13,6 +13,11 @@
  *   chord  <normalized>     (NEW — normalized Markov chord symbol for display)
  *   notes  <midi ...>       (NEW — playable MIDI note list)
  *   stop                    (NEW — silence currently sounding notes, e.g. N.C.)
+ *   playoff                 (NEW — auto-player finished; stop the transport)
+ *
+ * Auto-player (sequencer front-end): `play 1|0`, `beat` (quarter-note clock),
+ * `template <1..7>`, `length <bars>`, `seed <chord>` walk the Markov chain over
+ * a harmonic-rhythm template, feeding each chord back as the next input.
  *
  * PROJECT CONSTRAINT: only MAJOR or MINOR triads are sonified. `chord`
  * always shows the full symbol the Markov system returned (e.g. Cmaj7); the
@@ -51,6 +56,28 @@ const voicingOptions = {
   triadsOnly: true,
 };
 let previousVoicing = null; // last MIDI voicing, for nearest-voicing mode
+
+// --- auto-player state (walks the Markov chain over a harmonic template) --
+// Harmonic-rhythm templates: slot ONSETS in quarter-note beats within a
+// 1- or 2-bar (4/4) cycle. Chords change at each onset and sustain until the
+// next (the MIDI branch flushes held notes before each new chord).
+const TEMPLATES = {
+  1: { name: "whole_bar", spanBars: 1, onsets: [0] },
+  2: { name: "half_half", spanBars: 1, onsets: [0, 2] },
+  3: { name: "four_quarters", spanBars: 1, onsets: [0, 1, 2, 3] },
+  4: { name: "half_qtr_qtr", spanBars: 1, onsets: [0, 2, 3] },
+  5: { name: "qtr_qtr_half", spanBars: 1, onsets: [0, 1, 2] },
+  6: { name: "qtr_half_qtr", spanBars: 1, onsets: [0, 1, 3] },
+  7: { name: "static_2bar", spanBars: 2, onsets: [0] },
+};
+const player = {
+  active: false,
+  templateId: 3, // four_quarters
+  lengthBars: 4,
+  beat: -1, // first metro tick advances to 0
+  pending: null, // next Markov chord to sonify on the beat
+  seed: "C:maj", // chord the chain (re)starts from = latest chord handled
+};
 
 function clearReplyTimeout() {
   if (replyTimer) {
@@ -112,8 +139,16 @@ function emit(address, args) {
     const symbol = String(args[0] ?? "");
     // 1) backward-compatible raw symbol out for the rest of the system
     Max.outlet(["output", symbol]);
-    // 2) NEW: interpret -> voice -> sonify the Markov-returned chord
-    sonifyChord(symbol, "markov");
+    // 2) remember the latest chord so the auto-player can (re)seed from it
+    player.seed = symbol;
+    if (player.active) {
+      // In auto-play mode the reply is the NEXT slot's chord; the player
+      // sonifies on the beat, so just stash it — do not sound it now.
+      player.pending = symbol;
+    } else {
+      // manual / MIDI mode: interpret -> voice -> sonify immediately
+      sonifyChord(symbol, "markov");
+    }
     return;
   }
 
@@ -281,6 +316,93 @@ Max.addHandler("notein", (note, velocity) => {
   if (velocity !== undefined && Number(velocity) === 0) return; // ignore note-offs
   const pc = ((Math.round(n) % 12) + 12) % 12;
   submitChord(ROOT_NAMES[pc] + ":maj");
+});
+
+/* -----------------------------------------------------------------------
+ * Auto-player: play along the Markov chain for a set number of bars, using
+ * a harmonic-rhythm template to decide when chords change. At each slot we
+ * sonify the chord we hold and feed it back to Python; the reply becomes the
+ * next slot's chord (output -> input). Dormant until `play 1`.
+ * --------------------------------------------------------------------- */
+
+function templateCycleBeats(id) {
+  return (TEMPLATES[id] || TEMPLATES[3]).spanBars * 4;
+}
+function isSlotOnset(id, beatInCycle) {
+  return (TEMPLATES[id] || TEMPLATES[3]).onsets.indexOf(beatInCycle) !== -1;
+}
+
+function playerStart() {
+  player.active = true;
+  player.beat = -1;
+  player.pending = null;
+  const t = TEMPLATES[player.templateId] || TEMPLATES[3];
+  Max.post(
+    `player: start template ${player.templateId} (${t.name}) for ${player.lengthBars} bars, seed ${player.seed}`
+  );
+  Max.outlet(["status", "playing"]);
+  submitChord(player.seed); // fetch the first chord to play on beat 0
+}
+
+function playerStop(reason) {
+  if (!player.active) return; // idempotent — avoids playoff/toggle feedback loops
+  player.active = false;
+  previousVoicing = null;
+  Max.outlet(["stop"]); // silence held notes
+  Max.outlet(["playoff"]); // stop the transport metro + reset the PLAY toggle
+  Max.outlet(["status", reason || "stopped"]);
+  Max.post(`player: ${reason || "stopped"}`);
+}
+
+function playerBeat() {
+  if (!player.active) return;
+  player.beat += 1;
+  const b = player.beat;
+  if (b >= player.lengthBars * 4) {
+    playerStop("done");
+    return;
+  }
+  if (!isSlotOnset(player.templateId, b % templateCycleBeats(player.templateId))) return;
+  const chord = player.pending || player.seed;
+  sonifyChord(chord, "player"); // play the current chord (as a triad)
+  submitChord(chord); // ask Markov for its successor -> becomes pending
+}
+
+Max.addHandler("play", (value) => {
+  if (Number(value) !== 0) playerStart();
+  else playerStop("stopped");
+});
+
+/** Quarter-note clock tick from a transport-synced metro in Max. */
+Max.addHandler("beat", () => {
+  playerBeat();
+});
+
+/** Choose the harmonic-rhythm template (1..7). */
+Max.addHandler("template", (value) => {
+  const id = Math.round(Number(value));
+  if (TEMPLATES[id]) {
+    player.templateId = id;
+    Max.post(`player: template ${id} (${TEMPLATES[id].name})`);
+  }
+});
+
+/** Set the predetermined length in bars. */
+Max.addHandler("length", (value) => {
+  const n = Math.round(Number(value));
+  if (Number.isFinite(n) && n > 0) {
+    player.lengthBars = n;
+    Max.post(`player: length ${n} bars`);
+  }
+});
+
+/** Explicit seed override (optional; the chain also tracks the latest chord). */
+Max.addHandler("seed", (...atoms) => {
+  const s = chordFromArgs(atoms);
+  if (s) {
+    player.seed = s;
+    Max.post(`player: seed ${s}`);
+  }
 });
 
 /** Set the register centre used by the voicing engine (Max-side control). */
