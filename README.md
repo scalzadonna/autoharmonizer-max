@@ -1,4 +1,4 @@
-# Autoharmonizer Max — Markov Chord Generator
+# Autoharmonizer Max — Markov Chord Generator v2
 
 A local Max + Python system that sends one chord symbol to a Python service over OSC/UDP and receives one next chord sampled from a first-order Markov chain. Chord labels (e.g. `G:7`, `C:maj7`) are treated as opaque strings in v1.
 
