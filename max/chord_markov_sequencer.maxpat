@@ -12,8 +12,8 @@
 		"rect": [
 			80,
 			80,
-			1320,
-			880
+			1360,
+			900
 		],
 		"bglocked": 0,
 		"openinpresentation": 1,
@@ -58,7 +58,7 @@
 						620,
 						20
 					],
-					"text": "Markov Chord Sequencer — walks the Markov chain over a harmonic-rhythm template (major/minor triads)"
+					"text": "Markov Chord Sequencer — auto-plays the Markov chain over a harmonic-rhythm template (major/minor triads)"
 				}
 			},
 			{
@@ -73,7 +73,7 @@
 						620,
 						20
 					],
-					"text": "Seed a chord + Send, choose template (1-7) and length (bars), then press PLAY. Start the Python service first."
+					"text": "Seed a chord + Send, pick a rhythm + tempo + length, press PLAY. Runs on its own clock (no need to start Live's transport). Start Python for the chain to advance."
 				}
 			},
 			{
@@ -110,7 +110,7 @@
 					"text": "G:7",
 					"presentation": 1,
 					"presentation_rect": [
-						54,
+						56,
 						42,
 						120,
 						21
@@ -138,7 +138,7 @@
 					"text": "send",
 					"presentation": 1,
 					"presentation_rect": [
-						180,
+						182,
 						42,
 						48,
 						21
@@ -447,8 +447,8 @@
 					"text": "set $1",
 					"presentation": 1,
 					"presentation_rect": [
-						284,
-						142,
+						340,
+						122,
 						150,
 						22
 					]
@@ -651,7 +651,7 @@
 					"presentation_rect": [
 						60,
 						122,
-						180,
+						210,
 						22
 					]
 				}
@@ -708,7 +708,7 @@
 					"presentation": 1,
 					"presentation_rect": [
 						60,
-						152,
+						150,
 						210,
 						22
 					]
@@ -1309,7 +1309,7 @@
 					],
 					"presentation": 1,
 					"presentation_rect": [
-						50,
+						56,
 						74,
 						26,
 						26
@@ -1346,7 +1346,7 @@
 						70,
 						22
 					],
-					"text": "metro 4n",
+					"text": "metro 500",
 					"outlettype": [
 						"bang"
 					]
@@ -1372,7 +1372,7 @@
 			},
 			{
 				"box": {
-					"id": "obj-seq-tmpl",
+					"id": "obj-seq-bpm",
 					"maxclass": "number",
 					"numinlets": 1,
 					"numoutlets": 2,
@@ -1382,17 +1382,98 @@
 					],
 					"parameter_enable": 0,
 					"patching_rect": [
-						980,
-						190,
+						1120,
+						110,
 						50,
 						22
 					],
 					"presentation": 1,
 					"presentation_rect": [
-						92,
+						258,
 						86,
-						48,
-						21
+						50,
+						22
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-msper",
+					"maxclass": "newobj",
+					"numinlets": 2,
+					"numoutlets": 1,
+					"patching_rect": [
+						1120,
+						145,
+						80,
+						22
+					],
+					"text": "!/ 60000.",
+					"outlettype": [
+						"float"
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-load-bpm",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"patching_rect": [
+						1210,
+						110,
+						90,
+						22
+					],
+					"text": "loadmess 120",
+					"outlettype": [
+						""
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-menu",
+					"maxclass": "umenu",
+					"numinlets": 1,
+					"numoutlets": 3,
+					"outlettype": [
+						"int",
+						"",
+						""
+					],
+					"parameter_enable": 0,
+					"patching_rect": [
+						980,
+						190,
+						150,
+						22
+					],
+					"presentation": 1,
+					"presentation_rect": [
+						96,
+						86,
+						150,
+						22
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-plus1",
+					"maxclass": "newobj",
+					"numinlets": 2,
+					"numoutlets": 1,
+					"patching_rect": [
+						980,
+						225,
+						40,
+						22
+					],
+					"text": "+ 1",
+					"outlettype": [
+						"int"
 					]
 				}
 			},
@@ -1403,8 +1484,8 @@
 					"numinlets": 1,
 					"numoutlets": 1,
 					"patching_rect": [
-						1040,
-						190,
+						980,
+						260,
 						110,
 						22
 					],
@@ -1416,20 +1497,20 @@
 			},
 			{
 				"box": {
-					"id": "obj-seq-load-tmpl",
-					"maxclass": "newobj",
-					"numinlets": 1,
+					"id": "obj-seq-menu-items",
+					"maxclass": "message",
+					"numinlets": 2,
 					"numoutlets": 1,
-					"patching_rect": [
-						1160,
-						190,
-						90,
-						22
-					],
-					"text": "loadmess 3",
 					"outlettype": [
 						""
-					]
+					],
+					"patching_rect": [
+						1140,
+						190,
+						470,
+						22
+					],
+					"text": "clear, append whole_bar, append half_half, append four_quarters, append half_qtr_qtr, append qtr_qtr_half, append qtr_half_qtr, append static_2bar, set 2"
 				}
 			},
 			{
@@ -1445,16 +1526,16 @@
 					"parameter_enable": 0,
 					"patching_rect": [
 						980,
-						225,
+						300,
 						50,
 						22
 					],
 					"presentation": 1,
 					"presentation_rect": [
-						190,
+						324,
 						86,
-						48,
-						21
+						50,
+						22
 					]
 				}
 			},
@@ -1466,7 +1547,7 @@
 					"numoutlets": 1,
 					"patching_rect": [
 						1040,
-						225,
+						300,
 						100,
 						22
 					],
@@ -1483,8 +1564,8 @@
 					"numinlets": 1,
 					"numoutlets": 1,
 					"patching_rect": [
-						1160,
-						225,
+						1150,
+						300,
 						90,
 						22
 					],
@@ -1505,7 +1586,7 @@
 					],
 					"patching_rect": [
 						1120,
-						110,
+						70,
 						30,
 						22
 					],
@@ -1523,26 +1604,11 @@
 					],
 					"patching_rect": [
 						1160,
-						110,
+						70,
 						50,
 						22
 					],
 					"text": "set 0"
-				}
-			},
-			{
-				"box": {
-					"id": "obj-seq-legend",
-					"maxclass": "comment",
-					"numinlets": 1,
-					"numoutlets": 0,
-					"patching_rect": [
-						980,
-						270,
-						340,
-						80
-					],
-					"text": "templates: 1 whole_bar · 2 half_half · 3 four_quarters · 4 half_qtr_qtr · 5 qtr_qtr_half · 6 qtr_half_qtr · 7 static_2bar (2 bars)"
 				}
 			},
 			{
@@ -1553,7 +1619,7 @@
 					"numoutlets": 0,
 					"patching_rect": [
 						14,
-						10,
+						8,
 						340,
 						20
 					],
@@ -1598,7 +1664,7 @@
 					"patching_rect": [
 						14,
 						78,
-						34,
+						40,
 						18
 					],
 					"text": "play",
@@ -1606,74 +1672,74 @@
 					"presentation_rect": [
 						14,
 						78,
-						34,
+						40,
 						18
 					]
 				}
 			},
 			{
 				"box": {
-					"id": "obj-pres-tmpllabel",
+					"id": "obj-pres-rhythmlabel",
 					"maxclass": "comment",
 					"numinlets": 1,
 					"numoutlets": 0,
 					"patching_rect": [
-						92,
+						96,
 						68,
-						90,
+						70,
 						16
 					],
-					"text": "template 1-7",
+					"text": "rhythm",
 					"presentation": 1,
 					"presentation_rect": [
-						92,
+						96,
 						68,
-						90,
+						70,
 						16
 					]
 				}
 			},
 			{
 				"box": {
-					"id": "obj-pres-lenlabel",
+					"id": "obj-pres-bpmlabel",
 					"maxclass": "comment",
 					"numinlets": 1,
 					"numoutlets": 0,
 					"patching_rect": [
-						190,
+						258,
 						68,
-						90,
+						60,
 						16
 					],
-					"text": "length (bars)",
+					"text": "BPM",
 					"presentation": 1,
 					"presentation_rect": [
-						190,
+						258,
 						68,
-						90,
+						50,
 						16
 					]
 				}
 			},
 			{
 				"box": {
-					"id": "obj-pres-legend",
+					"id": "obj-pres-barslabel",
 					"maxclass": "comment",
 					"numinlets": 1,
 					"numoutlets": 0,
 					"patching_rect": [
-						300,
-						66,
-						230,
-						64
+						324,
+						68,
+						60,
+						16
 					],
-					"text": "1 whole · 2 half+half · 3 four qtrs · 4 half+q+q · 5 q+q+half · 6 q+half+q · 7 static 2bar",
+					"text": "bars",
 					"presentation": 1,
 					"presentation_rect": [
-						300,
-						66,
-						230,
-						64
+						324,
+						68,
+						50,
+						16
 					]
 				}
 			},
@@ -1707,7 +1773,7 @@
 					"numoutlets": 0,
 					"patching_rect": [
 						14,
-						154,
+						152,
 						44,
 						18
 					],
@@ -1715,7 +1781,7 @@
 					"presentation": 1,
 					"presentation_rect": [
 						14,
-						154,
+						152,
 						44,
 						18
 					]
@@ -1728,7 +1794,7 @@
 					"numinlets": 1,
 					"numoutlets": 0,
 					"patching_rect": [
-						284,
+						286,
 						124,
 						50,
 						18
@@ -1736,7 +1802,7 @@
 					"text": "status",
 					"presentation": 1,
 					"presentation_rect": [
-						284,
+						286,
 						124,
 						50,
 						18
@@ -2504,11 +2570,59 @@
 			{
 				"patchline": {
 					"destination": [
+						"obj-seq-msper",
+						0
+					],
+					"source": [
+						"obj-seq-bpm",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-seq-metro",
+						1
+					],
+					"source": [
+						"obj-seq-msper",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-seq-bpm",
+						0
+					],
+					"source": [
+						"obj-seq-load-bpm",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-seq-plus1",
+						0
+					],
+					"source": [
+						"obj-seq-menu",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
 						"obj-seq-prepend-tmpl",
 						0
 					],
 					"source": [
-						"obj-seq-tmpl",
+						"obj-seq-plus1",
 						0
 					]
 				}
@@ -2528,11 +2642,23 @@
 			{
 				"patchline": {
 					"destination": [
-						"obj-seq-tmpl",
+						"obj-seq-menu-items",
 						0
 					],
 					"source": [
-						"obj-seq-load-tmpl",
+						"obj-loadbang",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-seq-menu",
+						0
+					],
+					"source": [
+						"obj-seq-menu-items",
 						0
 					]
 				}
