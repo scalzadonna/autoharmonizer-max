@@ -27,8 +27,8 @@ Max patch                         Python service
 | Component | Requirement |
 |---|---|
 | Python | 3.9+ |
-| Max | Max 8+ (standalone `.maxpat`, not Max for Live in v1) |
-| Max externals | [CNMAT OSC](https://github.com/CNMAT/CNMAT-Externs) (`o.pack`, `o.route`) |
+| Max | Max 8+ with Node for Max (included in standard installs) |
+| Max npm package | `node-osc` (installed once via patch button or `npm install` in `max/`) |
 | Python packages | `python-osc`, `pytest` (see `python/requirements.txt`) |
 
 ## Quick start
@@ -52,6 +52,8 @@ You should see log output confirming the CSV loaded and the OSC server is listen
 ### 3. Open the Max patch
 
 Open [`max/chord_markov_device.maxpat`](max/chord_markov_device.maxpat) in Max.
+
+**First time only:** click **npm install** in the patch (or run `npm install` in the `max/` folder).
 
 1. Click **ping** — status should show `ready` when `/status/pong` is received.
 2. Enter a chord (e.g. `G:7`) and click **send**.
@@ -143,7 +145,9 @@ autoharmonizer-max/
 │   └── osc_contract.md                # OSC address mirror of PLAN.md
 │
 ├── max/
-│   ├── chord_markov_device.maxpat     # Standalone Max/MSP patch (UI + OSC transport)
+│   ├── chord_markov_device.maxpat     # Standalone Max/MSP patch (UI + Node OSC bridge)
+│   ├── markov_osc.js                  # Node-for-Max OSC client/server
+│   ├── package.json                   # npm dependency on node-osc
 │   └── README.md                      # Max-specific setup and troubleshooting
 │
 └── python/
@@ -201,7 +205,9 @@ G:7,C:maj7,241,0.2105
 
 | File | Purpose |
 |---|---|
-| `chord_markov_device.maxpat` | Max patch with chord input, send/ping/reload buttons, OSC routing via CNMAT, 500 ms reply timeout, status/output/error displays, and a symbol outlet |
+| `chord_markov_device.maxpat` | Max patch with chord input, send/ping/reload/npm buttons, status/output/error displays, and a symbol outlet |
+| `markov_osc.js` | Node-for-Max bridge: sends/receives OSC to Python on ports 9000/9001, handles 500 ms reply timeout |
+| `package.json` | Declares `node-osc` npm dependency for the bridge script |
 | `README.md` | Max-specific controls, ports, and troubleshooting |
 
 ### `python/src/`
@@ -233,9 +239,9 @@ G:7,C:maj7,241,0.2105
 | Symptom | Likely cause |
 |---|---|
 | Max status stays `waiting` | Python service not running, or wrong port |
-| `reply timeout` in Max | Python stopped, port mismatch, or CNMAT OSC not installed |
-| Python refuses to start | Port 9000 already in use, or CSV path invalid |
-| Garbled / no OSC reply | Raw strings sent via `udpsend` without CNMAT `o.pack` — see [PLAN.md](PLAN.md) |
+| `reply timeout` in Max | Python stopped, wrong port, or `node-osc` not installed |
+| `node-osc missing` in Max | Click **npm install** in the patch, or run `npm install` in `max/` |
+| Garbled / no OSC reply | Confirm Python is running; test with `python3 scripts/osc_smoke_test.py --spawn-service` |
 
 ## Further reading
 
