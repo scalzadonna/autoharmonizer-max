@@ -40,11 +40,23 @@ P.minimum_live_version = "";
 P.minimum_max_version = "";
 P.platform_compatibility = 0;
 P.saved_attribute_attributes = { default_plcolor: { expression: "" } };
-// This device exposes no live.* parameters -> an empty, Live-format bank.
+// Register every exposed live.* parameter object so Live sees them (and they
+// become macro-mappable). Entry form: id -> [longname, shortname, instance].
 P.parameters = {
   parameterbanks: { "0": { index: 0, name: "", parameters: ["-", "-", "-", "-", "-", "-", "-", "-"] } },
   inherited_shortname: 1,
 };
+const bank0 = P.parameters.parameterbanks["0"].parameters;
+let bankSlot = 0;
+for (const b of P.boxes) {
+  const box = b.box;
+  const vo = box.parameter_enable === 1 && box.saved_attribute_attributes && box.saved_attribute_attributes.valueof;
+  if (!vo || !vo.parameter_longname) continue;
+  const longname = vo.parameter_longname;
+  const shortname = vo.parameter_shortname || longname;
+  P.parameters[box.id] = [longname, shortname, 0];
+  if (bankSlot < bank0.length) bank0[bankSlot++] = longname; // surface on the device's parameter strip
+}
 
 const jsonText = JSON.stringify(doc, null, "\t");
 const payload = Buffer.concat([Buffer.from(jsonText, "utf8"), Buffer.from([0x00])]);

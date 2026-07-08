@@ -12,8 +12,8 @@
 		"rect": [
 			80,
 			80,
-			1360,
-			900
+			1400,
+			920
 		],
 		"bglocked": 0,
 		"openinpresentation": 1,
@@ -58,7 +58,7 @@
 						620,
 						20
 					],
-					"text": "Markov Chord Sequencer — auto-plays the Markov chain over a harmonic-rhythm template (major/minor triads)"
+					"text": "Markov Chord Sequencer — auto-plays the Markov chain; colour knobs bias major/minor/7th"
 				}
 			},
 			{
@@ -73,7 +73,7 @@
 						620,
 						20
 					],
-					"text": "Seed a chord + Send, pick a rhythm + tempo + length, press PLAY. Runs on its own clock (no need to start Live's transport). Start Python for the chain to advance."
+					"text": "Seed + Send, pick rhythm/tempo/length, press PLAY. Colour dials encourage major/minor/7th. 'sync' links the clock to Live's transport. Start Python for the chain to advance."
 				}
 			},
 			{
@@ -448,7 +448,7 @@
 					"presentation": 1,
 					"presentation_rect": [
 						340,
-						122,
+						178,
 						150,
 						22
 					]
@@ -650,7 +650,7 @@
 					"presentation": 1,
 					"presentation_rect": [
 						60,
-						122,
+						178,
 						210,
 						22
 					]
@@ -708,7 +708,7 @@
 					"presentation": 1,
 					"presentation_rect": [
 						60,
-						150,
+						206,
 						210,
 						22
 					]
@@ -1354,13 +1354,49 @@
 			},
 			{
 				"box": {
+					"id": "obj-seq-metro-sync",
+					"maxclass": "newobj",
+					"numinlets": 2,
+					"numoutlets": 1,
+					"patching_rect": [
+						1060,
+						110,
+						70,
+						22
+					],
+					"text": "metro 4n",
+					"outlettype": [
+						"bang"
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-switch",
+					"maxclass": "newobj",
+					"numinlets": 3,
+					"numoutlets": 1,
+					"patching_rect": [
+						980,
+						150,
+						70,
+						22
+					],
+					"text": "switch 2",
+					"outlettype": [
+						""
+					]
+				}
+			},
+			{
+				"box": {
 					"id": "obj-seq-prepend-beat",
 					"maxclass": "newobj",
 					"numinlets": 1,
 					"numoutlets": 1,
 					"patching_rect": [
 						980,
-						145,
+						185,
 						90,
 						22
 					],
@@ -1382,7 +1418,7 @@
 					],
 					"parameter_enable": 0,
 					"patching_rect": [
-						1120,
+						1150,
 						110,
 						50,
 						22
@@ -1391,7 +1427,7 @@
 					"presentation_rect": [
 						258,
 						86,
-						50,
+						46,
 						22
 					]
 				}
@@ -1403,7 +1439,7 @@
 					"numinlets": 2,
 					"numoutlets": 1,
 					"patching_rect": [
-						1120,
+						1150,
 						145,
 						80,
 						22
@@ -1421,12 +1457,73 @@
 					"numinlets": 1,
 					"numoutlets": 1,
 					"patching_rect": [
-						1210,
+						1240,
 						110,
 						90,
 						22
 					],
 					"text": "loadmess 120",
+					"outlettype": [
+						""
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-sync",
+					"maxclass": "toggle",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"outlettype": [
+						"int"
+					],
+					"parameter_enable": 0,
+					"patching_rect": [
+						1150,
+						185,
+						24,
+						24
+					],
+					"presentation": 1,
+					"presentation_rect": [
+						232,
+						136,
+						24,
+						24
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-sync-plus1",
+					"maxclass": "newobj",
+					"numinlets": 2,
+					"numoutlets": 1,
+					"patching_rect": [
+						1150,
+						220,
+						40,
+						22
+					],
+					"text": "+ 1",
+					"outlettype": [
+						"int"
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-load-sync",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"patching_rect": [
+						1200,
+						185,
+						90,
+						22
+					],
+					"text": "loadmess 0",
 					"outlettype": [
 						""
 					]
@@ -1446,7 +1543,7 @@
 					"parameter_enable": 0,
 					"patching_rect": [
 						980,
-						190,
+						250,
 						150,
 						22
 					],
@@ -1482,7 +1579,7 @@
 					"numoutlets": 1,
 					"patching_rect": [
 						980,
-						225,
+						285,
 						40,
 						22
 					],
@@ -1500,7 +1597,7 @@
 					"numoutlets": 1,
 					"patching_rect": [
 						980,
-						260,
+						320,
 						110,
 						22
 					],
@@ -1518,7 +1615,7 @@
 					"numoutlets": 1,
 					"patching_rect": [
 						1140,
-						190,
+						250,
 						90,
 						22
 					],
@@ -1541,15 +1638,15 @@
 					"parameter_enable": 0,
 					"patching_rect": [
 						980,
-						300,
+						360,
 						50,
 						22
 					],
 					"presentation": 1,
 					"presentation_rect": [
-						324,
+						318,
 						86,
-						50,
+						46,
 						22
 					]
 				}
@@ -1562,7 +1659,7 @@
 					"numoutlets": 1,
 					"patching_rect": [
 						1040,
-						300,
+						360,
 						100,
 						22
 					],
@@ -1580,11 +1677,179 @@
 					"numoutlets": 1,
 					"patching_rect": [
 						1150,
-						300,
+						360,
 						90,
 						22
 					],
 					"text": "loadmess 4",
+					"outlettype": [
+						""
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-dial-maj",
+					"maxclass": "live.dial",
+					"numinlets": 1,
+					"numoutlets": 2,
+					"outlettype": [
+						"",
+						"float"
+					],
+					"parameter_enable": 1,
+					"patching_rect": [
+						980,
+						410,
+						44,
+						48
+					],
+					"saved_attribute_attributes": {
+						"valueof": {
+							"parameter_longname": "Major",
+							"parameter_shortname": "Major",
+							"parameter_type": 0,
+							"parameter_mmin": 0,
+							"parameter_mmax": 1,
+							"parameter_unitstyle": 1,
+							"parameter_modmode": 3
+						}
+					},
+					"varname": "Major",
+					"presentation": 1,
+					"presentation_rect": [
+						66,
+						112,
+						44,
+						48
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-dial-min",
+					"maxclass": "live.dial",
+					"numinlets": 1,
+					"numoutlets": 2,
+					"outlettype": [
+						"",
+						"float"
+					],
+					"parameter_enable": 1,
+					"patching_rect": [
+						1030,
+						410,
+						44,
+						48
+					],
+					"saved_attribute_attributes": {
+						"valueof": {
+							"parameter_longname": "Minor",
+							"parameter_shortname": "Minor",
+							"parameter_type": 0,
+							"parameter_mmin": 0,
+							"parameter_mmax": 1,
+							"parameter_unitstyle": 1,
+							"parameter_modmode": 3
+						}
+					},
+					"varname": "Minor",
+					"presentation": 1,
+					"presentation_rect": [
+						116,
+						112,
+						44,
+						48
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-dial-7th",
+					"maxclass": "live.dial",
+					"numinlets": 1,
+					"numoutlets": 2,
+					"outlettype": [
+						"",
+						"float"
+					],
+					"parameter_enable": 1,
+					"patching_rect": [
+						1080,
+						410,
+						44,
+						48
+					],
+					"saved_attribute_attributes": {
+						"valueof": {
+							"parameter_longname": "Seventh",
+							"parameter_shortname": "7th",
+							"parameter_type": 0,
+							"parameter_mmin": 0,
+							"parameter_mmax": 1,
+							"parameter_unitstyle": 1,
+							"parameter_modmode": 3
+						}
+					},
+					"varname": "Seventh",
+					"presentation": 1,
+					"presentation_rect": [
+						166,
+						112,
+						44,
+						48
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-prepend-colmaj",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"patching_rect": [
+						980,
+						470,
+						140,
+						22
+					],
+					"text": "prepend colormajor",
+					"outlettype": [
+						""
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-prepend-colmin",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"patching_rect": [
+						980,
+						500,
+						140,
+						22
+					],
+					"text": "prepend colorminor",
+					"outlettype": [
+						""
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-prepend-col7th",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"patching_rect": [
+						980,
+						530,
+						140,
+						22
+					],
+					"text": "prepend color7th",
 					"outlettype": [
 						""
 					]
@@ -1600,7 +1865,7 @@
 						""
 					],
 					"patching_rect": [
-						1120,
+						1240,
 						70,
 						30,
 						22
@@ -1618,7 +1883,7 @@
 						""
 					],
 					"patching_rect": [
-						1160,
+						1280,
 						70,
 						50,
 						22
@@ -1635,7 +1900,7 @@
 					"patching_rect": [
 						14,
 						8,
-						340,
+						360,
 						20
 					],
 					"text": "MARKOV CHORD SEQUENCER",
@@ -1643,7 +1908,7 @@
 					"presentation_rect": [
 						14,
 						8,
-						320,
+						340,
 						20
 					]
 				}
@@ -1723,7 +1988,7 @@
 					"patching_rect": [
 						258,
 						68,
-						60,
+						44,
 						16
 					],
 					"text": "BPM",
@@ -1731,7 +1996,7 @@
 					"presentation_rect": [
 						258,
 						68,
-						50,
+						44,
 						16
 					]
 				}
@@ -1743,17 +2008,61 @@
 					"numinlets": 1,
 					"numoutlets": 0,
 					"patching_rect": [
-						324,
+						318,
 						68,
-						60,
+						44,
 						16
 					],
 					"text": "bars",
 					"presentation": 1,
 					"presentation_rect": [
-						324,
+						318,
 						68,
+						44,
+						16
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-pres-colorlabel",
+					"maxclass": "comment",
+					"numinlets": 1,
+					"numoutlets": 0,
+					"patching_rect": [
+						14,
+						122,
 						50,
+						16
+					],
+					"text": "colour",
+					"presentation": 1,
+					"presentation_rect": [
+						14,
+						128,
+						50,
+						16
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-pres-synclabel",
+					"maxclass": "comment",
+					"numinlets": 1,
+					"numoutlets": 0,
+					"patching_rect": [
+						232,
+						118,
+						90,
+						16
+					],
+					"text": "sync transport",
+					"presentation": 1,
+					"presentation_rect": [
+						232,
+						118,
+						90,
 						16
 					]
 				}
@@ -1766,7 +2075,7 @@
 					"numoutlets": 0,
 					"patching_rect": [
 						14,
-						124,
+						180,
 						44,
 						18
 					],
@@ -1774,7 +2083,7 @@
 					"presentation": 1,
 					"presentation_rect": [
 						14,
-						124,
+						180,
 						44,
 						18
 					]
@@ -1788,7 +2097,7 @@
 					"numoutlets": 0,
 					"patching_rect": [
 						14,
-						152,
+						208,
 						44,
 						18
 					],
@@ -1796,7 +2105,7 @@
 					"presentation": 1,
 					"presentation_rect": [
 						14,
-						152,
+						208,
 						44,
 						18
 					]
@@ -1810,7 +2119,7 @@
 					"numoutlets": 0,
 					"patching_rect": [
 						286,
-						124,
+						180,
 						50,
 						18
 					],
@@ -1818,7 +2127,7 @@
 					"presentation": 1,
 					"presentation_rect": [
 						286,
-						124,
+						180,
 						50,
 						18
 					]
@@ -2537,6 +2846,18 @@
 			{
 				"patchline": {
 					"destination": [
+						"obj-seq-metro-sync",
+						0
+					],
+					"source": [
+						"obj-seq-play",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
 						"obj-seq-prepend-play",
 						0
 					],
@@ -2561,11 +2882,35 @@
 			{
 				"patchline": {
 					"destination": [
+						"obj-seq-switch",
+						1
+					],
+					"source": [
+						"obj-seq-metro",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-seq-switch",
+						2
+					],
+					"source": [
+						"obj-seq-metro-sync",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
 						"obj-seq-prepend-beat",
 						0
 					],
 					"source": [
-						"obj-seq-metro",
+						"obj-seq-switch",
 						0
 					]
 				}
@@ -2614,6 +2959,42 @@
 					],
 					"source": [
 						"obj-seq-load-bpm",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-seq-sync-plus1",
+						0
+					],
+					"source": [
+						"obj-seq-sync",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-seq-switch",
+						0
+					],
+					"source": [
+						"obj-seq-sync-plus1",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-seq-sync",
+						0
+					],
+					"source": [
+						"obj-seq-load-sync",
 						0
 					]
 				}
@@ -2705,6 +3086,78 @@
 			{
 				"patchline": {
 					"destination": [
+						"obj-seq-prepend-colmaj",
+						0
+					],
+					"source": [
+						"obj-seq-dial-maj",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-node",
+						0
+					],
+					"source": [
+						"obj-seq-prepend-colmaj",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-seq-prepend-colmin",
+						0
+					],
+					"source": [
+						"obj-seq-dial-min",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-node",
+						0
+					],
+					"source": [
+						"obj-seq-prepend-colmin",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-seq-prepend-col7th",
+						0
+					],
+					"source": [
+						"obj-seq-dial-7th",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-node",
+						0
+					],
+					"source": [
+						"obj-seq-prepend-col7th",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
 						"obj-seq-playoff-metro",
 						0
 					],
@@ -2730,6 +3183,18 @@
 				"patchline": {
 					"destination": [
 						"obj-seq-metro",
+						0
+					],
+					"source": [
+						"obj-seq-playoff-metro",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-seq-metro-sync",
 						0
 					],
 					"source": [

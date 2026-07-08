@@ -196,6 +196,53 @@ assertPlayable("C7(#9) paren", P.parseChord("C7(#9)"), 0, [0, 4, 7, 10, 15]);
 assertPlayable("Cmaj7(#11) paren", P.parseChord("Cmaj7(#11)"), 0, [0, 4, 7, 11, 18]);
 
 /* ------------------------------------------------------------------ *
+ * Performable colour controls (major / minor / 7th knobs)
+ * ------------------------------------------------------------------ */
+{
+  const rng = () => 0.0; // always "hits" a probability > 0
+  const rngHigh = () => 0.999; // never hits (unless prob == 1)
+  const Cmaj = P.parseChord("Cmaj7"); // natural quality: major
+  const Am = P.parseChord("Am7"); // natural quality: minor
+
+  // no colour -> natural triad unchanged
+  check("colour off: Cmaj7 -> major triad",
+    eqArr(P.colorChord(Cmaj, {}).intervals, [0, 4, 7]));
+  check("colour off: Am7 -> minor triad",
+    eqArr(P.colorChord(Am, {}).intervals, [0, 3, 7]));
+
+  // major knob forces major (even on a naturally-minor chord)
+  check("colorMajor=1 forces major on Am7",
+    P.colorChord(Am, { colorMajor: 1, rng }).quality === "major");
+  // minor knob forces minor (even on a naturally-major chord)
+  check("colorMinor=1 forces minor on Cmaj7",
+    P.colorChord(Cmaj, { colorMinor: 1, rng }).quality === "minor");
+  // major checked before minor when both maxed
+  check("both maxed -> major wins",
+    P.colorChord(Am, { colorMajor: 1, colorMinor: 1, rng }).quality === "major");
+
+  // 7th knob adds a flat-7th: major->dom7, minor->min7
+  check("color7th=1 on major -> dom7 [0,4,7,10]",
+    eqArr(P.colorChord(Cmaj, { color7th: 1, rng }).intervals, [0, 4, 7, 10]));
+  check("color7th=1 on minor -> min7 [0,3,7,10]",
+    eqArr(P.colorChord(Am, { color7th: 1, rng }).intervals, [0, 3, 7, 10]));
+  check("color7th=1 sets seventh flag", P.colorChord(Cmaj, { color7th: 1, rng }).seventh === true);
+  // probability 0 never fires even when the roll is low
+  check("color7th=0 never adds 7th", P.colorChord(Cmaj, { color7th: 0, rng }).seventh === false);
+  check("colorMajor<roll: no force", P.colorChord(Am, { colorMajor: 0.3, rng: rngHigh }).quality === "minor");
+
+  // chordToNotes end-to-end with colour: 7th knob on a Markov reply
+  const r7 = P.chordToNotes("C:maj", { color7th: 1, voiceLeadingEnabled: false, rng }, null);
+  check("chordToNotes color7th -> 4 notes (dom7)", r7.notes.length === 4 && r7.seventh === true,
+    "[" + r7.notes + "]");
+  check("chordToNotes color7th notes are valid MIDI",
+    r7.notes.every((n) => Number.isInteger(n) && n >= 0 && n <= 127));
+  // clamping: out-of-range knob values are clamped to 0..1
+  check("colorMajor>1 clamps (still forces major)",
+    P.colorChord(Am, { colorMajor: 5, rng }).quality === "major");
+  check("negative knob clamps to 0", P.colorChord(Cmaj, { colorMajor: -3, rng }).quality === "major");
+}
+
+/* ------------------------------------------------------------------ *
  * Normalization behaviour
  * ------------------------------------------------------------------ */
 check('normalize " Cmaj7 " -> Cmaj7', P.normalizeSymbol(" Cmaj7 ") === "Cmaj7");

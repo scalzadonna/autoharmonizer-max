@@ -54,6 +54,12 @@ const voicingOptions = {
   // still recognises the full symbol; the voicing engine reduces it to a
   // plain triad. Toggle with the `triadsonly` message.
   triadsOnly: true,
+  // Performable colour knobs (0..1), driven by live.dials in the sequencer:
+  //   colorMajor -> chance of forcing MAJOR, colorMinor -> chance of MINOR,
+  //   color7th   -> chance of adding a flat-7th. All 0 => natural triad.
+  colorMajor: 0,
+  colorMinor: 0,
+  color7th: 0,
 };
 let previousVoicing = null; // last MIDI voicing, for nearest-voicing mode
 
@@ -431,6 +437,25 @@ Max.addHandler("triadsonly", (value) => {
   voicingOptions.triadsOnly = Number(value) !== 0;
   previousVoicing = null; // voice count changes -> reset voice-leading history
   Max.post(`triads only -> ${voicingOptions.triadsOnly ? "on" : "off"}`);
+});
+
+/* --- performable colour knobs (live.dials, 0..1) ----------------------- */
+function clamp01(v) {
+  v = Number(v);
+  if (!Number.isFinite(v)) return 0;
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+/** Encourage MAJOR chords (probability 0..1). */
+Max.addHandler("colormajor", (v) => {
+  voicingOptions.colorMajor = clamp01(v);
+});
+/** Encourage MINOR chords (probability 0..1). */
+Max.addHandler("colorminor", (v) => {
+  voicingOptions.colorMinor = clamp01(v);
+});
+/** Encourage 7th chords — adds a flat-7th (probability 0..1). */
+Max.addHandler("color7th", (v) => {
+  voicingOptions.color7th = clamp01(v);
 });
 
 /** Manual panic: forget history and tell Max to stop sounding notes. */

@@ -145,7 +145,25 @@ bars it stops and flushes all notes.
 
 **Presentation controls:** `seed` chord + **send**, **PLAY** toggle, a **rhythm**
 dropdown (the 7 templates below), **tempo (BPM)** (default 120), **length**
-(bars, default 4), plus `chord` / `notes` / `status` displays.
+(bars, default 4), three **colour** `live.dial`s, a **sync** toggle, plus
+`chord` / `notes` / `status` displays.
+
+**Performable colour knobs** (`live.dial`s — registered parameters, so you can
+map them to rack **macros**): each is a per-chord probability 0–100 %.
+
+| Dial | Effect |
+|---|---|
+| **Major** | chance of forcing the chord to a **major** triad |
+| **Minor** | chance of forcing it to a **minor** triad (Major wins ties) |
+| **7th** | chance of adding a **flat-7th** (major→dom7, minor→min7) |
+
+All three at 0 = the natural major/minor triad. The colour is applied to the
+Markov-returned chord in Node (`colormajor` / `colorminor` / `color7th`
+messages), so it works in real time as you turn the knobs.
+
+**Sync toggle:** off (default) = free-running ms clock at the **BPM** knob; on =
+the clock **links to Live's global transport** (a transport-locked `metro 4n`
+that follows Live's tempo and plays only while the transport is running).
 
 **Harmonic-rhythm templates** (slot onsets in beats, 4/4):
 

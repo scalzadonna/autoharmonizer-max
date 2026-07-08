@@ -381,6 +381,14 @@ const DEFAULT_VOICING_OPTIONS = {
   // voicing engine collapses it to a plain triad.  Set false to voice the
   // full chord as understood by the parser.
   triadsOnly: true,
+  // Performable "colour" controls (0..1). Each is a per-chord probability:
+  //   colorMajor  — chance of forcing the triad to MAJOR
+  //   colorMinor  — chance of forcing the triad to MINOR
+  //   color7th    — chance of adding a flat-7th (major->dom7, minor->min7)
+  // All 0 (default) => the natural major/minor triad, unchanged.
+  colorMajor: 0,
+  colorMinor: 0,
+  color7th: 0,
 };
 
 // The only two chord shapes we ever sonify when triadsOnly is on.
@@ -413,6 +421,59 @@ function triadIntervals(parsed) {
  */
 function effectiveIntervals(parsed, opt) {
   return opt && opt.triadsOnly === false ? parsed.intervals : triadIntervals(parsed).intervals;
+}
+
+function clamp01(x) {
+  x = Number(x);
+  if (!Number.isFinite(x)) return 0;
+  return x < 0 ? 0 : x > 1 ? 1 : x;
+}
+
+/**
+ * Apply the performable "colour" controls to a parsed chord and return the
+ * FINAL interval set to voice. This is where the major/minor/7th knobs act.
+ *
+ * The decision is made ONCE here (it uses randomness), so the result can be
+ * voiced deterministically by voiceChord/voiceLead. Pass `opt.rng` (a 0..1
+ * function) to make it deterministic for tests.
+ *
+ *   - start from the chord's natural triad quality (major/minor by its third)
+ *   - with probability colorMajor -> force MAJOR; else with probability
+ *     colorMinor -> force MINOR (checked in that order)
+ *   - with probability color7th -> add a flat-7th (major->dom7, minor->min7)
+ *
+ * When all three knobs are 0 this returns exactly the natural triad, so the
+ * default behaviour is unchanged.  When triadsOnly is false AND no colour is
+ * dialled in, the full parsed chord is returned untouched.
+ *
+ * @returns {{ intervals:number[], quality:"major"|"minor", seventh:boolean }}
+ */
+function colorChord(parsed, opt) {
+  opt = opt || {};
+  const cMaj = clamp01(opt.colorMajor || 0);
+  const cMin = clamp01(opt.colorMinor || 0);
+  const c7 = clamp01(opt.color7th || 0);
+  const anyColor = cMaj > 0 || cMin > 0 || c7 > 0;
+
+  if (opt.triadsOnly === false && !anyColor) {
+    const q = triadIntervals(parsed).quality;
+    return { intervals: parsed.intervals.slice(), quality: q, seventh: false };
+  }
+
+  const rng = typeof opt.rng === "function" ? opt.rng : Math.random;
+
+  let quality = triadIntervals(parsed).quality; // natural major/minor
+  const r = rng();
+  if (r < cMaj) quality = "major";
+  else if (r < cMaj + cMin) quality = "minor";
+
+  const intervals = (quality === "major" ? MAJOR_TRIAD : MINOR_TRIAD).slice();
+  let seventh = false;
+  if (rng() < c7) {
+    intervals.push(10); // flat-7th: major->dominant7, minor->minor7
+    seventh = true;
+  }
+  return { intervals, quality, seventh };
 }
 
 function clampMidi(n) {
@@ -611,13 +672,22 @@ function chordToNotes(raw, options, prevVoicing) {
     };
   }
 
-  const notes =
-    opt.voiceLeadingEnabled && prevVoicing && prevVoicing.length
-      ? voiceLead(parsed, prevVoicing, opt)
-      : voiceChord(parsed, opt);
+  // Resolve the final quality/intervals ONCE (this is where the colour knobs
+  // act), then voice that fixed shape so voice-leading stays deterministic.
+  const color = colorChord(parsed, opt);
+  const rootPc = parsed.rootPitchClass;
+  const coloredParsed = Object.assign({}, parsed, {
+    intervals: color.intervals,
+    pitchClasses: color.intervals.map((iv) => (((rootPc + iv) % 12) + 12) % 12),
+  });
+  // The colour step already produced the exact intervals to play, so bypass
+  // the triad reduction inside the voicer.
+  const voiceOpt = Object.assign({}, opt, { triadsOnly: false });
 
-  const triad = triadIntervals(parsed);
-  const triadsOnly = opt.triadsOnly !== false;
+  const notes =
+    voiceOpt.voiceLeadingEnabled && prevVoicing && prevVoicing.length
+      ? voiceLead(coloredParsed, prevVoicing, voiceOpt)
+      : voiceChord(coloredParsed, voiceOpt);
 
   return {
     normalizedSymbol: parsed.normalizedSymbol,
@@ -625,10 +695,10 @@ function chordToNotes(raw, options, prevVoicing) {
     notes,
     isNoChord: false,
     error: null,
-    // What was actually voiced: the reduced major/minor triad (default) or
-    // the full chord quality when triadsOnly is off.
-    triadQuality: triadsOnly ? triad.quality : parsed.quality,
-    playedIntervals: triadsOnly ? triad.intervals : parsed.intervals.slice(),
+    // What was actually voiced.
+    triadQuality: color.quality,
+    playedIntervals: color.intervals.slice(),
+    seventh: color.seventh,
   };
 }
 
@@ -648,6 +718,7 @@ module.exports = {
   parseChord,
   triadIntervals,
   effectiveIntervals,
+  colorChord,
   voiceChord,
   voiceLead,
   candidateVoicings,
