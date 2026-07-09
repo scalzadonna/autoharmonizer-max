@@ -35,7 +35,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 30.0, 42.0, 500.0, 20.0 ],
-					"text" : "Click the G:7 message box to edit chord. npm install once, then ping/send. Pick model below."
+					"text" : "Pick a chord from the menu, then ping/send. npm install once. Pick model below."
 				}
 
 			}
@@ -46,19 +46,20 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 30.0, 80.0, 120.0, 20.0 ],
-					"text" : "chord (message box)"
+					"text" : "chord"
 				}
 
 			}
 , 			{
 				"box" : 				{
-					"id" : "obj-input",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
+					"id" : "obj-chord-menu",
+					"maxclass" : "umenu",
+					"numinlets" : 1,
+					"numoutlets" : 3,
+					"outlettype" : [ "int", "", "" ],
+					"parameter_enable" : 0,
 					"patching_rect" : [ 30.0, 105.0, 120.0, 22.0 ],
-					"text" : "G:7"
+					"items" : [ "C:maj7", ",", "G:7", ",", "C:maj", ",", "D:min7", ",", "A:min7", ",", "F:maj7", ",", "E:7", ",", "A:7", ",", "D:7", ",", "B:min7", ",", "G:min7", ",", "A-:7", ",", "F:min7" ]
 				}
 
 			}
@@ -188,12 +189,36 @@
 			}
 , 			{
 				"box" : 				{
+					"id" : "obj-prepend-set-chord",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 30.0, 135.0, 65.0, 22.0 ],
+					"text" : "prepend set"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-chord-store",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 105.0, 135.0, 80.0, 22.0 ],
+					"text" : "C:maj7"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-prepend-chord",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 30.0, 145.0, 90.0, 22.0 ],
+					"patching_rect" : [ 30.0, 165.0, 90.0, 22.0 ],
 					"text" : "prepend chord"
 				}
 
@@ -541,15 +566,29 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-input", 0 ],
+					"destination" : [ "obj-chord-store", 0 ],
 					"source" : [ "obj-btn-send", 0 ]
 				}
 
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-prepend-set-chord", 0 ],
+					"source" : [ "obj-chord-menu", 1 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-chord-store", 0 ],
+					"source" : [ "obj-prepend-set-chord", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-prepend-chord", 0 ],
-					"source" : [ "obj-input", 0 ]
+					"source" : [ "obj-chord-store", 0 ]
 				}
 
 			}

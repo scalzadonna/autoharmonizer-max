@@ -70,14 +70,14 @@ You should see log output confirming the CSV loaded and the OSC server is listen
 
 ### 4. Open the Max patch
 
-Open [`max/chord_markov_device.maxpat`](max/chord_markov_device.maxpat) in Max.
+Open [`max/chord_generator_device.maxpat`](max/chord_generator_device.maxpat) in Max.
 
 **First time only:** click **npm install** in the patch (or run `npm install` in the `max/` folder).
 
 1. Click **ping** — status should show `ready` when `/status/pong` is received.
 2. Pick a **model** from the menu (`markov`, `rnn`, or `lstm`).
-3. Enter a chord (e.g. `G:7`) and click **send**.
-4. The sampled next chord appears in **output** (e.g. `C:maj` or `C:maj7`).
+3. Pick a **chord** from the menu (default: `C:maj7`) and click **send**.
+4. The sampled next chord appears in **output** (e.g. `C:maj` or `G:7`).
 
 ### 5. Verify without Max (optional)
 
@@ -183,7 +183,7 @@ autoharmonizer-max/
 │   └── osc_contract.md
 │
 ├── max/
-│   ├── chord_markov_device.maxpat     # UI + model switcher
+│   ├── chord_generator_device.maxpat     # UI + model switcher
 │   ├── markov_osc.js
 │   └── README.md
 │
@@ -236,7 +236,7 @@ G:7,C:maj7,241,0.2105
 
 | File | Purpose |
 |---|---|
-| `chord_markov_device.maxpat` | Max patch: chord input, **model switcher**, send/ping/reload, status/output/error |
+| `chord_generator_device.maxpat` | Max patch: chord input, **model switcher**, send/ping/reload, status/output/error |
 | `markov_osc.js` | Node-for-Max bridge (v2): `/control/model`, 1500 ms reply timeout |
 | `package.json` | Declares `node-osc` npm dependency for the bridge script |
 | `README.md` | Max-specific controls, ports, and troubleshooting |

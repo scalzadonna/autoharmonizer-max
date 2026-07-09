@@ -28,7 +28,7 @@ python3 -m src.main
 
 ### 2. Open the patch
 
-Open `chord_markov_device.maxpat` in Max.
+Open `chord_generator_device.maxpat` in Max.
 
 ### 3. Install npm dependencies (first time only)
 
@@ -44,11 +44,9 @@ npm install
 1. Click **ping** — **status** should show `ready`.
 2. Select a **model** from the menu: `markov`, `rnn`, or `lstm`.
 3. **active model** should match your selection (after `/status/model` from Python).
-4. Click the **G:7 message box** to edit the chord (do not use textedit).
-5. Click **send** — the next chord appears in **output**.
+4. Select a **chord** from the menu (default: `C:maj7`), then click **send** — the next chord appears in **output**.
+5. Click **reload** to reload the Markov CSV without restarting Python.
 6. After updating `markov_osc.js`, click **restart js**.
-
-Click **reload** to reload the Markov CSV without restarting Python.
 
 ## Default ports
 
@@ -66,7 +64,8 @@ Ports are set in `markov_osc.js`. Change them there if you use non-default Pytho
 | **model** (umenu) | Sends `/control/model` with `markov`, `rnn`, or `lstm` |
 | **npm install** | Runs `script npm install` to fetch `node-osc` (first time only) |
 | **ping** | Sends `/control/ping` |
-| **send** | Sends `/chord/input` with the message box value |
+| **chord** (umenu) | Select input chord (default `C:maj7`) |
+| **send** | Sends `/chord/input` with the selected chord |
 | **reload** | Sends `/control/reload` (Markov CSV only) |
 | **restart js** | Restarts the Node bridge after JS edits |
 | status | Shows `ready` or `waiting` |
@@ -84,7 +83,7 @@ Ports are set in `markov_osc.js`. Change them there if you use non-default Pytho
 
 | File | Purpose |
 |---|---|
-| `chord_markov_device.maxpat` | Max UI with model switcher + Node bridge |
+| `chord_generator_device.maxpat` | Max UI with model switcher + Node bridge |
 | `markov_osc.js` | Node-for-Max OSC client/server (v2) |
 | `package.json` | npm dependency on `node-osc` |
 

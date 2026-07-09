@@ -49,7 +49,7 @@ The implementation should favor simple local operation on one machine first, usi
 
 ### Components
 
-1. **Max patch (`max/chord_markov_device.maxpat`)**
+1. **Max patch (`max/chord_generator_device.maxpat`)**
    - Standalone Max/MSP patch (not Max for Live in v1).
    - Receives or captures an input chord.
    - Sends OSC to Python.
@@ -516,7 +516,7 @@ project-root/
   markov_openbook.csv             # source corpus (copy or symlink into data/)
   chord_progressions_transitions.csv
   max/
-    chord_markov_device.maxpat    # v2: adds model switcher UI
+    chord_generator_device.maxpat    # v2: adds model switcher UI
     markov_osc.js                 # v2: /control/model handler
     README.md
   python/
@@ -801,7 +801,7 @@ CHORD_MODEL=lstm python -m src.main
 
 ## Max device changes (v2)
 
-Update `max/chord_markov_device.maxpat` and `max/markov_osc.js`:
+Update `max/chord_generator_device.maxpat` and `max/markov_osc.js`:
 
 1. **Model switcher UI** — `umenu` items: `markov`, `rnn`, `lstm` (default `markov`).
 2. On selection change → send `/control/model <name>` via existing OSC client.
@@ -917,7 +917,6 @@ Validation gate:
 
 1. **First-load timeout:** Neural model cold start may exceed Max’s 500 ms reply timeout. Options: (A) preload on `/control/model`, (B) bump timeout to 1500 ms globally, (C) send immediate `/status/model` ack and async `/chord/output` (more complex). **Recommendation:** preload on model select + keep 500 ms for `/chord/input` after load.
 2. **Git LFS for checkpoints:** ~4 MB total — acceptable in-repo, or fetch-on-demand only? **Recommendation:** fetch script + `.gitignore` the `.pt` files; document one-time setup.
-3. **Patch rename:** Keep `chord_markov_device.maxpat` filename vs rename to `chord_generator_device.maxpat`? **Recommendation:** keep filename, update title comment only.
 
 ## Definition of done (v2)
 

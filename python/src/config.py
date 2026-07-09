@@ -9,7 +9,7 @@ from pathlib import Path
 
 PROTOCOL_VERSION = "v2"
 
-# OSC addresses — keep in sync with PLAN.md and max/chord_markov_device.maxpat
+# OSC addresses — keep in sync with PLAN.md and max/chord_generator_device.maxpat
 OSC_CHORD_INPUT = "/chord/input"
 OSC_CHORD_OUTPUT = "/chord/output"
 OSC_STATUS_READY = "/status/ready"

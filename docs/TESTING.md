@@ -151,7 +151,7 @@ You should still get `OK: /chord/input 'G:7' -> /chord/output '...'`.
 
 ## Level 3 — Max patch manual checklist
 
-Open [`max/chord_markov_device.maxpat`](../max/chord_markov_device.maxpat) in Max.
+Open [`max/chord_generator_device.maxpat`](../max/chord_generator_device.maxpat) in Max.
 
 Ensure Python is running (`python3 -m src.main` from `python/`).
 
@@ -160,13 +160,12 @@ Ensure Python is running (`python3 -m src.main` from `python/`).
 | 1 | Click **npm install** (first time only) | Max console shows npm finished without errors |
 | 2 | Click **ping** | **status** shows `ready` |
 | 3 | **active model** shows `markov` | Matches Python log `model=markov` |
-| 4 | Edit chord message box to `G:7`, click **send** | **output** shows a chord (e.g. `C:maj7`) |
+| 4 | Select **C:maj7** (or another chord) from menu, click **send** | **output** shows a chord (e.g. `G:7` or `C:maj`) |
 | 5 | Select **rnn** in model menu | **active model** updates to `rnn` (may take a few seconds first time) |
-| 6 | Click **send** with `G:7` | **output** updates to a valid chord |
+| 6 | Click **send** with `G:7` selected | **output** updates to a valid chord |
 | 7 | Select **lstm** in model menu | **active model** updates to `lstm` |
-| 8 | Click **send** with `G:7` | **output** updates to a valid chord |
-| 9 | Try `C:maj7`, `D:min7`, `A-:7` | Each send returns a chord in **output** |
-| 10 | Click **reload** | Status stays `ready`; Markov CSV reloaded |
+| 8 | Try `D:min7`, `A-:7`, `F:maj7` from chord menu | Each send returns a chord in **output** |
+| 9 | Click **reload** | Status stays `ready`; Markov CSV reloaded |
 
 ### Chords to try
 
@@ -182,7 +181,7 @@ E:7   A:7     D:7      B:min7   A-:7     F:min7   G:min7
 - **Markov** usually returns a *different* chord with weighted randomness (e.g. `G:7` → `C:maj` or `C:maj7`).
 - **RNN/LSTM** often return the **same** chord as the input for common symbols — the model assigns ~99% probability to the input token. That is normal for these checkpoints; it still confirms the model is loaded and responding.
 - First switch to **rnn** or **lstm** may take a few seconds while torch loads the checkpoint. If you see `reply timeout`, wait for **active model** to update, then send again.
-- Use the **message box** for chord entry (not textedit). The hint in the patch explains why.
+- Pick chords from the **chord** menu (12 common symbols). Default selection is `C:maj7`.
 
 ---
 
