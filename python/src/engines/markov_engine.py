@@ -22,6 +22,22 @@ class MarkovEngine:
         self._table = table
         self._fallback = fallback
         self._rng = random.Random(seed)
+        self._temperature = 1.0
+
+    def set_temperature(self, temperature: float) -> None:
+        """Set sampling temperature (>1 flattens = more adventurous, <1 sharpens)."""
+        self._temperature = max(0.05, float(temperature))
+
+    def _temper(self, probs: tuple[float, ...]) -> list[float]:
+        """Reshape a probability vector by temperature. Identity at 1.0."""
+        t = self._temperature
+        if t == 1.0:
+            return list(probs)
+        adjusted = [p ** (1.0 / t) for p in probs]
+        total = sum(adjusted)
+        if total <= 0.0:
+            return list(probs)
+        return [a / total for a in adjusted]
 
     def sample(self, raw_input: str, *, session: bool = False) -> SampleResult:
         chord = raw_input.strip()
@@ -38,7 +54,7 @@ class MarkovEngine:
         weights = self._table.weighted_choices_by_source.get(chord)
         if weights:
             targets, probs = zip(*weights)
-            chosen = self._rng.choices(list(targets), weights=list(probs), k=1)[0]
+            chosen = self._rng.choices(list(targets), weights=self._temper(probs), k=1)[0]
             idx = list(targets).index(chosen)
             return SampleResult(
                 output=chosen,

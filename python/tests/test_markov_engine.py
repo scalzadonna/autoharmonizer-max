@@ -53,3 +53,37 @@ def test_error_only_fallback():
     result = engine.sample("X:???")
     assert result.output is None
     assert result.fallback_used is True
+
+
+def test_temperature_default_is_identity(engine: MarkovEngine):
+    # Reshaping at temperature 1.0 must not change the RNG path (determinism).
+    baseline = MarkovEngine(engine._table, fallback="echo_input", seed=42).sample("G:7")
+    engine.set_temperature(1.0)
+    assert engine.sample("G:7").output == baseline.output
+
+
+def test_temper_sharpens_and_flattens(engine: MarkovEngine):
+    probs = (0.6, 0.3, 0.1)
+
+    engine.set_temperature(0.1)  # spice "safe" -> sharpen toward the favourite
+    hot = engine._temper(probs)
+    assert hot[0] > probs[0]
+    assert abs(sum(hot) - 1.0) < 1e-9
+
+    engine.set_temperature(10.0)  # spice "wild" -> flatten toward uniform
+    cold = engine._temper(probs)
+    assert cold[0] < probs[0]
+    assert abs(sum(cold) - 1.0) < 1e-9
+
+
+def test_low_temperature_reduces_output_diversity(engine: MarkovEngine):
+    # Directional property: safer (low temp) yields no more variety than wild.
+    source = max(
+        engine._table.weighted_choices_by_source,
+        key=lambda s: len(engine._table.weighted_choices_by_source[s]),
+    )
+    engine.set_temperature(0.1)
+    safe = {engine.sample(source).output for _ in range(60)}
+    engine.set_temperature(3.0)
+    wild = {engine.sample(source).output for _ in range(60)}
+    assert len(safe) <= len(wild)

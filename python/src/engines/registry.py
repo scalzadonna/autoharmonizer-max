@@ -42,6 +42,7 @@ class EngineRegistry:
         self._session_mode = session_mode if session_mode in SESSION_MODES else DEFAULT_SESSION_MODE
         self._session_max_steps = session_max_steps
         self._session_auto_feed = session_auto_feed
+        self._adventure = 0.5
         self._lock = threading.Lock()
         self._table: TransitionTable | None = None
         self._markov: MarkovEngine | None = None
@@ -186,6 +187,34 @@ class EngineRegistry:
 
         self.reset_session()
         logger.info("active model set to %s", name)
+        return True, None
+
+    def set_adventure(self, value: float) -> tuple[bool, str | None]:
+        """Set the 'spice' / adventurousness (0-1) as a live sampling temperature.
+
+        0.5 is neutral (temperature 1.0). Higher values flatten the distribution
+        toward rarer, surprising chords; lower values sharpen toward safe, common
+        ones. Applies to Markov and to any loaded/future neural engine.
+        """
+        try:
+            v = float(value)
+        except (TypeError, ValueError):
+            return False, f"invalid spice value: {value!r}"
+
+        v = max(0.0, min(1.0, v))
+        # Centered map: 0 -> 1/sqrt(3) (safe), 0.5 -> 1.0 (neutral), 1 -> sqrt(3) (wild).
+        temperature = 3.0 ** (v - 0.5)
+
+        with self._lock:
+            self._adventure = v
+            self._neural_temperature = temperature
+            markov, rnn, lstm = self._markov, self._rnn, self._lstm
+
+        for engine in (markov, rnn, lstm):
+            if engine is not None:
+                engine.set_temperature(temperature)
+
+        logger.info("spice=%.3f -> temperature=%.3f", v, temperature)
         return True, None
 
     def sample(self, raw_input: str) -> SampleResult:

@@ -17,6 +17,7 @@ from .config import (
     OSC_CONTROL_PING,
     OSC_CONTROL_RELOAD,
     OSC_CONTROL_SESSION,
+    OSC_CONTROL_SPICE,
     OSC_DEBUG_CANDIDATES,
     OSC_DEBUG_FALLBACK_USED,
     OSC_DEBUG_INPUT_ECHO,
@@ -176,6 +177,22 @@ class ChordOscService:
         self._emit_session_status()
         logger.info("session control: %s", mode)
 
+    def _handle_spice(self, _address: str, *args: object) -> None:
+        if not args:
+            self._emit_error("malformed OSC payload: missing spice value")
+            return
+        try:
+            value = float(args[0])
+        except (TypeError, ValueError):
+            self._emit_error("malformed OSC payload: spice must be a number")
+            return
+
+        ok, err = self._registry.set_adventure(value)
+        if not ok:
+            self._emit_error(err or "failed to set spice")
+            return
+        logger.debug("spice set to %s", value)
+
     def _build_dispatcher(self) -> Dispatcher:
         dispatcher = Dispatcher()
         dispatcher.map(OSC_CHORD_INPUT, self._handle_chord_input)
@@ -183,6 +200,7 @@ class ChordOscService:
         dispatcher.map(OSC_CONTROL_RELOAD, self._handle_reload)
         dispatcher.map(OSC_CONTROL_MODEL, self._handle_model)
         dispatcher.map(OSC_CONTROL_SESSION, self._handle_session)
+        dispatcher.map(OSC_CONTROL_SPICE, self._handle_spice)
         dispatcher.set_default_handler(self._handle_unknown)
         return dispatcher
 

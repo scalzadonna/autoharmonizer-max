@@ -64,6 +64,10 @@ class RnnEngine:
     def reset_session(self) -> None:
         self._session.reset()
 
+    def set_temperature(self, temperature: float) -> None:
+        """Update softmax sampling temperature live (used on the next sample)."""
+        self._temperature = max(0.05, float(temperature))
+
     def _ensure_loaded(self) -> None:
         if self._model is not None:
             return

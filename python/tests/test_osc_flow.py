@@ -140,6 +140,20 @@ def test_model_switch_status(osc_service):
     assert models[-1] == "lstm"
 
 
+def test_spice_control_accepted(osc_service):
+    client, received = osc_service
+    before = len(received["messages"])
+    client.send_message("/control/spice", [0.9])
+    client.send_message("/chord/input", ["G:7"])
+    time.sleep(0.3)
+
+    new_messages = received["messages"][before:]
+    errors = [args[0] for addr, args in new_messages if addr == "/error"]
+    outputs = [args[0] for addr, args in new_messages if addr == "/chord/output"]
+    assert not any("unknown OSC address" in str(e) for e in errors)
+    assert outputs, "expected /chord/output after spice change"
+
+
 def test_session_status_on_ping(osc_service):
     client, received = osc_service
     before = len(received["messages"])

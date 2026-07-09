@@ -119,6 +119,11 @@ Python -> Max:   /debug/fallback_used i  0
 | Max -> Python | `/control/ping` | _(none)_ | Health check; sent after Max bind and after Python restart. |
 | Python -> Max | `/status/pong` | `int` (`1`) | Health response. |
 | Max -> Python | `/control/reload` | _(none)_ | Reload CSV without restart. |
+| Max -> Python | `/control/model` | `string` | Switch backend (`markov`, `rnn`, `lstm`). |
+| Python -> Max | `/status/model` | `string` | Active backend name. |
+| Max -> Python | `/control/session` | `string` | Session mode (`auto`, `stateless`, `session`, `reset`). |
+| Python -> Max | `/status/session` | `string`, `int` | Session mode + step count. |
+| Max -> Python | `/control/spice` | `float` (`0`–`1`) | Live sampling adventurousness; `0.5` neutral, higher = wilder. |
 
 ### Optional debug addresses
 

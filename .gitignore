@@ -1,2 +1,5 @@
 .DS_Store
 data/jazznet/checkpoints/**/*.pt
+__pycache__/
+*.pyc
+.pytest_cache/

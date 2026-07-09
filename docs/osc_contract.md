@@ -18,6 +18,7 @@ Required addresses:
 | Python → Max | `/status/model` | string |
 | Max → Python | `/control/session` | string (`auto`, `stateless`, `session`, `reset`) |
 | Python → Max | `/status/session` | string mode, int step |
+| Max → Python | `/control/spice` | float `0.0`–`1.0` (adventurousness; `0.5` = neutral, higher = wilder) |
 
 Debug (when `--debug`):
 
@@ -28,3 +29,5 @@ Debug (when `--debug`):
 Default ports: Python `9000`, Max `9001`, host `127.0.0.1`.
 
 Session defaults (`SESSION_MODE=auto`): RNN/LSTM use session mode; Markov is always stateless. Session auto-resets after `SESSION_MAX_STEPS` (default 64) user chord steps.
+
+Spice (`/control/spice`): a live sampling temperature applied to Markov **and** the neural engines. `0.5` is neutral (temperature `1.0`); higher values flatten the distribution toward rarer/surprising chords, lower values sharpen toward safe/common ones (mapped `temperature = 3 ** (value − 0.5)`).
