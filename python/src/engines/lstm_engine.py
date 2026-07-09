@@ -7,6 +7,8 @@ import logging
 import random
 from pathlib import Path
 
+import torch
+
 from ..chord_simplifier import ChordSimplifier
 from ..config import DEFAULT_FALLBACK
 from .base import SampleResult
@@ -33,7 +35,7 @@ class LstmEngine:
         self._epoch = epoch
         self._fallback = fallback
         self._rng = random.Random(seed)
-        self._torch_rng = random.Random(seed)
+        self._torch_gen = torch.Generator().manual_seed(seed) if seed is not None else None
         self._simplifier = ChordSimplifier()
         self._vocab: JazzNetVocab | None = None
         self._model: ChordLSTM | None = None
@@ -135,7 +137,7 @@ class LstmEngine:
                 context,
                 vocab=self._vocab,
                 rnn=False,
-                rng=self._torch_rng,
+                generator=self._torch_gen,
             )
         except ValueError as exc:
             return SampleResult(

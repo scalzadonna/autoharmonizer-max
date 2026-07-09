@@ -1,6 +1,7 @@
 # OSC contract mirror — canonical spec is ../PLAN.md (protocol v2)
 
-See [PLAN.md](../PLAN.md) sections **OSC contract** and **Max OSC stack**.
+See [PLAN.md](../PLAN.md) sections **OSC contract** and **Max OSC stack**.  
+Colleague testing: [TESTING.md](TESTING.md).
 
 Required addresses:
 

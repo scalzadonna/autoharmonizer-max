@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import random
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -19,7 +17,7 @@ def predict_next_index(
     *,
     vocab: JazzNetVocab,
     rnn: bool = False,
-    rng: random.Random | None = None,
+    generator: torch.Generator | None = None,
     max_resample: int = 10,
 ) -> tuple[int, float]:
     device = next(model.parameters()).device
@@ -34,9 +32,11 @@ def predict_next_index(
 
         probabilities = F.softmax(output[0][-1], dim=0)
 
-    rng = rng or random.Random()
     for _ in range(max_resample):
-        next_token = torch.multinomial(probabilities, 1).item()
+        if generator is not None:
+            next_token = torch.multinomial(probabilities, 1, generator=generator).item()
+        else:
+            next_token = torch.multinomial(probabilities, 1).item()
         if not vocab.is_special(next_token):
             return next_token, float(probabilities[next_token].item())
 

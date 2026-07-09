@@ -11,23 +11,25 @@ A local Max + Python system that sends one chord symbol to a Python service over
 Chord labels (e.g. `G:7`, `C:maj7`) are treated as opaque strings; RNN/LSTM map them into a 115-chord JazzNet vocabulary when needed.
 
 **Protocol version:** v2  
-**Canonical spec:** [PLAN.md](PLAN.md)
+**Canonical spec:** [PLAN.md](PLAN.md)  
+**Colleague testing guide:** [docs/TESTING.md](docs/TESTING.md) ← start here for setup and verification
 
 ## How it works
 
 ```
 Max patch                         Python service
 ──────────                        ──────────────
-[chord input]                     load CSV transition table
+[chord input]                     active backend (markov / rnn / lstm)
+[model menu]  ──/control/model──► load engine + sample next chord
      │  /chord/input (UDP)              │
-     └──────────────────────────►  weighted sample
+     └──────────────────────────►  weighted / neural sample
                                         │
      ◄──────────────────────────  /chord/output (UDP)
 [output display]
 ```
 
-- **Max** handles UI, OSC transport, status, and downstream routing.
-- **Python** loads the CSV, validates transitions, samples the next chord, and replies over OSC.
+- **Max** handles UI, model selection, OSC transport, status, and downstream routing.
+- **Python** loads the active engine (Markov CSV or JazzNet checkpoint), samples the next chord, and replies over OSC.
 - Communication uses **localhost UDP** on fixed ports (`9000` / `9001`).
 
 ## Requirements
@@ -149,55 +151,54 @@ Full contract: [PLAN.md](PLAN.md) · [docs/osc_contract.md](docs/osc_contract.md
 
 ## Testing
 
+See **[docs/TESTING.md](docs/TESTING.md)** for a step-by-step colleague checklist (Python-only and Max).
+
+Quick commands from `python/`:
+
 ```bash
-cd python
-python3 -m pytest -q
+python3 -m pytest -q                                      # full suite (67 tests)
+python3 -m pytest tests/test_neural_models_suite.py -v    # RNN/LSTM only (46 tests)
+python3 scripts/osc_smoke_test.py --spawn-service         # OSC smoke test (Markov)
 ```
 
-Tests cover CSV loading, Markov sampling, fallback behavior, and localhost OSC round-trips.
+Tests cover CSV loading, Markov sampling, RNN/LSTM inference across 13 chords, engine registry, fallback behavior, and localhost OSC round-trips.
 
 ## Repository layout
 
 ```text
 autoharmonizer-max/
-├── README.md                          # This file
-├── PLAN.md                            # Canonical implementation spec (protocol v1)
+├── README.md
+├── PLAN.md                            # Canonical spec (v1 + v2)
 │
 ├── data/
-│   ├── markov_openbook.csv            # Default transition corpus (~900 rows, 89 sources)
-│   └── chord_progressions_transitions.csv  # Smaller corpus for smoke tests
-│
-├── markov_openbook.csv                # Source copy of openbook corpus (repo root)
-├── chord_progressions_transitions.csv # Source copy of small corpus (repo root)
+│   ├── markov_openbook.csv            # Markov corpus
+│   ├── chord_progressions_transitions.csv
+│   └── jazznet/                       # RNN/LSTM (fetch via script)
+│       ├── chords.json
+│       ├── checkpoints/rnn|lstm/*.pt
+│       └── metadata.json
 │
 ├── docs/
-│   └── osc_contract.md                # OSC address mirror of PLAN.md
+│   ├── TESTING.md                     # Colleague setup & verification guide
+│   └── osc_contract.md
 │
 ├── max/
-│   ├── chord_markov_device.maxpat     # Standalone Max/MSP patch (UI + Node OSC bridge)
-│   ├── markov_osc.js                  # Node-for-Max OSC client/server
-│   ├── package.json                   # npm dependency on node-osc
-│   └── README.md                      # Max-specific setup and troubleshooting
+│   ├── chord_markov_device.maxpat     # UI + model switcher
+│   ├── markov_osc.js
+│   └── README.md
 │
 └── python/
-    ├── requirements.txt               # python-osc, pytest
-    ├── pytest.ini                     # Pytest config
-    │
-    ├── src/                           # Python OSC + Markov service
-    │   ├── __init__.py
-    │   ├── config.py                  # CLI/env parsing, OSC constants, path resolution
-    │   ├── csv_loader.py              # CSV validation, duplicate merge, normalization
-    │   ├── markov_engine.py           # Weighted sampling and fallback logic
-    │   ├── osc_service.py             # OSC server/client, message handlers, reload
-    │   └── main.py                    # Service entry point
-    │
+    ├── requirements.txt               # python-osc, torch, pytest
+    ├── src/
+    │   ├── engines/                   # markov, rnn, lstm, registry
+    │   ├── osc_service.py
+    │   └── main.py
     ├── scripts/
-    │   └── osc_smoke_test.py          # End-to-end OSC test without Max
-    │
+    │   ├── fetch_jazznet_assets.py
+    │   └── osc_smoke_test.py
     └── tests/
-        ├── test_csv_loader.py         # CSV schema, merge, validation tests
-        ├── test_markov_engine.py      # Sampling, fallback, seed determinism
-        └── test_osc_flow.py           # Localhost OSC integration tests
+        ├── test_neural_models_suite.py
+        └── ...
 ```
 
 ## File reference
@@ -228,14 +229,15 @@ G:7,C:maj7,241,0.2105
 
 | File | Purpose |
 |---|---|
-| `osc_contract.md` | Quick-reference mirror of the OSC addresses defined in `PLAN.md` |
+| [TESTING.md](docs/TESTING.md) | **Colleague guide** — setup, automated tests, Max checklist, troubleshooting |
+| [osc_contract.md](docs/osc_contract.md) | OSC address quick reference |
 
 ### `max/`
 
 | File | Purpose |
 |---|---|
-| `chord_markov_device.maxpat` | Max patch with chord input, send/ping/reload/npm buttons, status/output/error displays, and a symbol outlet |
-| `markov_osc.js` | Node-for-Max bridge: sends/receives OSC to Python on ports 9000/9001, handles 500 ms reply timeout |
+| `chord_markov_device.maxpat` | Max patch: chord input, **model switcher**, send/ping/reload, status/output/error |
+| `markov_osc.js` | Node-for-Max bridge (v2): `/control/model`, 1500 ms reply timeout |
 | `package.json` | Declares `node-osc` npm dependency for the bridge script |
 | `README.md` | Max-specific controls, ports, and troubleshooting |
 
@@ -245,15 +247,16 @@ G:7,C:maj7,241,0.2105
 |---|---|
 | `config.py` | Parses CLI flags and env vars; defines OSC address constants and protocol version; resolves CSV paths relative to repo root |
 | `csv_loader.py` | Loads and validates the transition CSV; merges duplicate rows; normalizes probabilities; builds in-memory lookup tables and a global fallback pool |
-| `markov_engine.py` | Samples the next chord from weighted transitions; handles unknown/empty input via configurable fallback policies |
-| `osc_service.py` | Runs the OSC UDP server and reply client; handles `/chord/input`, `/control/ping`, `/control/reload`; emits status, error, and optional debug messages |
+| `markov_engine.py` | Backward-compatible re-export; see `src/engines/markov_engine.py` |
+| `osc_service.py` | OSC server/client; `/chord/input`, `/control/model`, ping/reload |
 | `main.py` | Starts the service, configures logging, handles graceful shutdown on SIGINT/SIGTERM |
 
 ### `python/scripts/`
 
 | File | Purpose |
 |---|---|
-| `osc_smoke_test.py` | Sends `/control/ping` and `/chord/input` to a running (or spawned) service; asserts `/chord/output` is received |
+| `osc_smoke_test.py` | Sends `/control/ping` and `/chord/input`; asserts `/chord/output` |
+| `fetch_jazznet_assets.py` | Downloads RNN/LSTM checkpoints and vocab from JazzNet `train` branch |
 
 ### `python/tests/`
 
@@ -261,19 +264,25 @@ G:7,C:maj7,241,0.2105
 |---|---|
 | `test_csv_loader.py` | Tests header validation, openbook loading, duplicate merge, empty chord rejection |
 | `test_markov_engine.py` | Tests known-chord sampling, unknown-chord fallback, empty input, seed determinism |
-| `test_osc_flow.py` | In-process OSC integration tests for ping/pong, chord output, and error+echo fallback |
+| `test_osc_flow.py` | OSC integration: ping/pong, chord output, model switch |
+| `test_neural_models_suite.py` | RNN/LSTM: 13 chords × 2 models + registry + OSC |
 
 ## Troubleshooting
 
+See [docs/TESTING.md](docs/TESTING.md#troubleshooting) for the full table. Common issues:
+
 | Symptom | Likely cause |
 |---|---|
-| Max status stays `waiting` | Python service not running, or wrong port |
-| `reply timeout` in Max | Python stopped, wrong port, or `node-osc` not installed |
-| `node-osc missing` in Max | Click **npm install** in the patch, or run `npm install` in `max/` |
-| Garbled / no OSC reply | Confirm Python is running; test with `python3 scripts/osc_smoke_test.py --spawn-service` |
+| Max status stays `waiting` | Python service not running — start `python3 -m src.main` |
+| `reply timeout` | Python stopped; or RNN/LSTM loading — wait for **active model**, retry |
+| `node-osc missing` | Run `npm install` in `max/` or click **npm install** in patch |
+| RNN/LSTM model switch fails | Run `python3 scripts/fetch_jazznet_assets.py` |
+| Neural tests skipped in pytest | JazzNet checkpoints not downloaded |
+| Garbled / no OSC reply | Run `python3 scripts/osc_smoke_test.py --spawn-service` to isolate Python |
 
 ## Further reading
 
+- [docs/TESTING.md](docs/TESTING.md) — colleague setup and verification checklist
 - [PLAN.md](PLAN.md) — full spec, build phases, and acceptance criteria
-- [max/README.md](max/README.md) — Max patch controls and setup
+- [max/README.md](max/README.md) — Max patch controls and npm setup
 - [docs/osc_contract.md](docs/osc_contract.md) — OSC address quick reference
