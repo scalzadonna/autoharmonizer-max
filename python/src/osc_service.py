@@ -45,6 +45,8 @@ class ChordOscService:
             jazznet_epoch=settings.jazznet_epoch,
             fallback=settings.fallback,
             seed=settings.seed,
+            neural_temperature=settings.neural_temperature,
+            neural_exclude_input=settings.neural_exclude_input,
             initial_model=settings.model,
         )
         self._client = SimpleUDPClient(settings.max_host, settings.max_port)

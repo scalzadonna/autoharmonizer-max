@@ -179,7 +179,7 @@ E:7   A:7     D:7      B:min7   A-:7     F:min7   G:min7
 ### Expected behavior (important)
 
 - **Markov** usually returns a *different* chord with weighted randomness (e.g. `G:7` → `C:maj` or `C:maj7`).
-- **RNN/LSTM** often return the **same** chord as the input for common symbols — the model assigns ~99% probability to the input token. That is normal for these checkpoints; it still confirms the model is loaded and responding.
+- **RNN/LSTM** (defaults: temperature **1.5**, exclude input **on**) sample a **transition** rather than echoing the input. Restart Python after changing `--neural-temperature` or `--neural-exclude-input`.
 - First switch to **rnn** or **lstm** may take a few seconds while torch loads the checkpoint. If you see `reply timeout`, wait for **active model** to update, then send again.
 - Pick chords from the **chord** menu (12 common symbols). Default selection is `C:maj7`.
 
@@ -240,6 +240,10 @@ Colleagues rarely need to change defaults. Full list:
 | Python listen port | `MARKOV_PORT` | `9000` |
 | Max reply port | `MARKOV_MAX_PORT` | `9001` |
 | Random seed | `MARKOV_SEED` | unset |
+| Neural temperature | `NEURAL_TEMPERATURE` | `1.5` |
+| Exclude input (RNN/LSTM) | `NEURAL_EXCLUDE_INPUT` | `true` |
+
+RNN/LSTM use temperature and input masking by default so outputs vary step-to-step. Disable with `--no-neural-exclude-input` and `--neural-temperature 1.0` if you need legacy echo behavior.
 
 See [README.md](../README.md) for CLI flags and fallback policies.
 

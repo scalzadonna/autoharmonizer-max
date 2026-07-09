@@ -25,7 +25,7 @@ def main(argv: list[str] | None = None) -> int:
     logger.info("starting chord service protocol=%s", PROTOCOL_VERSION)
     logger.info(
         "config model=%s csv=%s jazznet=%s epoch=%s host=%s port=%s max=%s:%s "
-        "fallback=%s seed=%s debug=%s",
+        "fallback=%s seed=%s neural_temp=%s neural_exclude_input=%s debug=%s",
         settings.model,
         settings.csv_path,
         settings.jazznet_dir,
@@ -36,6 +36,8 @@ def main(argv: list[str] | None = None) -> int:
         settings.max_port,
         settings.fallback,
         settings.seed,
+        settings.neural_temperature,
+        settings.neural_exclude_input,
         settings.debug,
     )
 

@@ -109,11 +109,19 @@ Settings are passed via **CLI flags** or **environment variables** (env vars ove
 | Fallback policy | `--fallback` | `MARKOV_FALLBACK` | `echo_input` |
 | Debug OSC | `--debug` | `MARKOV_DEBUG` | off |
 | Random seed | `--seed` | `MARKOV_SEED` | unset |
+| Neural temperature | `--neural-temperature` | `NEURAL_TEMPERATURE` | `1.5` |
+| Exclude input chord (RNN/LSTM) | `--neural-exclude-input` / `--no-neural-exclude-input` | `NEURAL_EXCLUDE_INPUT` | on |
 
-Example with LSTM backend:
+Example with LSTM backend and default neural sampling:
 
 ```bash
-CHORD_MODEL=lstm python3 -m src.main
+python3 -m src.main --model lstm
+```
+
+RNN/LSTM defaults use **temperature 1.5** and **exclude input chord** so each step tends to produce a transition rather than echoing the same symbol. To restore the original peaked sampling:
+
+```bash
+python3 -m src.main --model lstm --neural-temperature 1.0 --no-neural-exclude-input
 ```
 
 Example with deterministic Markov sampling:

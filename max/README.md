@@ -77,7 +77,7 @@ Ports are set in `markov_osc.js`. Change them there if you use non-default Pytho
 
 - Default model on Python startup is **markov** unless you set `CHORD_MODEL=lstm` (etc.) before launch.
 - First selection of **rnn** or **lstm** triggers checkpoint load in Python (~2–5 s). Wait for **active model** to update before sending chords.
-- RNN/LSTM may return the same chord as the input for common symbols — that is expected model behavior, not a bug.
+- RNN/LSTM may return the same chord as the input when `--neural-temperature 1.0 --no-neural-exclude-input` is set; defaults avoid this.
 
 ## Files in this folder
 

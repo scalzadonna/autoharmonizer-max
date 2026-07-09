@@ -31,6 +31,9 @@ DEFAULT_FALLBACK = "echo_input"
 MODEL_NAMES = ("markov", "rnn", "lstm")
 DEFAULT_MODEL = "markov"
 
+DEFAULT_NEURAL_TEMPERATURE = 1.5
+DEFAULT_NEURAL_EXCLUDE_INPUT = True
+
 PROB_SUM_TOLERANCE = 0.01
 
 
@@ -83,6 +86,13 @@ def _env_int(name: str) -> int | None:
     return int(raw)
 
 
+def _env_float(name: str) -> float | None:
+    raw = os.environ.get(name)
+    if raw is None or raw == "":
+        return None
+    return float(raw)
+
+
 @dataclass(frozen=True)
 class Settings:
     csv_path: Path
@@ -96,6 +106,8 @@ class Settings:
     fallback: str
     debug: bool
     seed: int | None
+    neural_temperature: float
+    neural_exclude_input: bool
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -133,6 +145,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--debug", action="store_true", help="Emit debug OSC messages")
     parser.add_argument("--seed", type=int, default=None, help="Random seed for sampling")
+    parser.add_argument(
+        "--neural-temperature",
+        type=float,
+        default=DEFAULT_NEURAL_TEMPERATURE,
+        help="Softmax temperature for RNN/LSTM sampling (>1 = more variety)",
+    )
+    parser.add_argument(
+        "--neural-exclude-input",
+        action=argparse.BooleanOptionalAction,
+        default=DEFAULT_NEURAL_EXCLUDE_INPUT,
+        help="Mask input chord token when sampling RNN/LSTM (force transition)",
+    )
     return parser
 
 
@@ -162,6 +186,17 @@ def load_settings(argv: list[str] | None = None) -> Settings:
     if seed is None:
         seed = args.seed
 
+    neural_temperature = _env_float("NEURAL_TEMPERATURE")
+    if neural_temperature is None:
+        neural_temperature = args.neural_temperature
+    if neural_temperature <= 0:
+        raise ValueError(f"neural temperature must be > 0, got {neural_temperature}")
+
+    exclude_env = _env_bool("NEURAL_EXCLUDE_INPUT")
+    neural_exclude_input = (
+        exclude_env if exclude_env is not None else args.neural_exclude_input
+    )
+
     if host != "127.0.0.1":
         raise ValueError("v2 requires binding to 127.0.0.1 only")
 
@@ -177,4 +212,6 @@ def load_settings(argv: list[str] | None = None) -> Settings:
         fallback=fallback,
         debug=debug,
         seed=seed,
+        neural_temperature=neural_temperature,
+        neural_exclude_input=neural_exclude_input,
     )

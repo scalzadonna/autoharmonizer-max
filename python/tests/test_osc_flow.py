@@ -39,6 +39,8 @@ def _settings(python_port: int, max_port: int) -> Settings:
         fallback="echo_input",
         debug=False,
         seed=42,
+        neural_temperature=1.5,
+        neural_exclude_input=True,
     )
 
 

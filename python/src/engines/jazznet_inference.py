@@ -8,7 +8,35 @@ import torch.nn.functional as F
 
 from .jazznet_vocab import JazzNetVocab
 
-SPECIAL_TOKENS = {"pad", "<BOS>", "<EOS>"}
+
+def apply_sampling_distribution(
+    logits: torch.Tensor,
+    *,
+    vocab: JazzNetVocab,
+    temperature: float = 1.0,
+    exclude_indices: set[int] | None = None,
+) -> torch.Tensor:
+    """Build a sampling distribution from raw logits with optional temperature and masks."""
+    if temperature <= 0:
+        raise ValueError(f"temperature must be > 0, got {temperature}")
+
+    scaled = logits / temperature
+    probabilities = F.softmax(scaled, dim=0)
+
+    mask = set(exclude_indices or ())
+    mask.update({vocab.pad_idx, vocab.bos_idx, vocab.eos_idx})
+
+    if mask:
+        probs = probabilities.clone()
+        for idx in mask:
+            if 0 <= idx < probs.numel():
+                probs[idx] = 0.0
+        total = probs.sum()
+        if total.item() <= 0:
+            raise ValueError("no valid next token after applying sampling constraints")
+        probabilities = probs / total
+
+    return probabilities
 
 
 def predict_next_index(
@@ -18,6 +46,8 @@ def predict_next_index(
     vocab: JazzNetVocab,
     rnn: bool = False,
     generator: torch.Generator | None = None,
+    temperature: float = 1.0,
+    exclude_indices: set[int] | None = None,
     max_resample: int = 10,
 ) -> tuple[int, float]:
     device = next(model.parameters()).device
@@ -30,7 +60,13 @@ def predict_next_index(
             length = torch.tensor([len(context_indices)]).to("cpu")
             output, _ = model(input_seq, length)
 
-        probabilities = F.softmax(output[0][-1], dim=0)
+        logits = output[0][-1]
+        probabilities = apply_sampling_distribution(
+            logits,
+            vocab=vocab,
+            temperature=temperature,
+            exclude_indices=exclude_indices,
+        )
 
     for _ in range(max_resample):
         if generator is not None:
@@ -40,11 +76,7 @@ def predict_next_index(
         if not vocab.is_special(next_token):
             return next_token, float(probabilities[next_token].item())
 
-    # Fallback to argmax among non-special tokens
-    probs = probabilities.clone()
-    for idx in (vocab.pad_idx, vocab.bos_idx, vocab.eos_idx):
-        probs[idx] = 0.0
-    if probs.sum() <= 0:
+    next_token = int(torch.argmax(probabilities).item())
+    if vocab.is_special(next_token):
         raise ValueError("no valid next token in model output")
-    next_token = int(torch.argmax(probs).item())
     return next_token, float(probabilities[next_token].item())

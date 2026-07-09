@@ -21,6 +21,8 @@ def registry():
         jazznet_epoch=35,
         fallback="echo_input",
         seed=42,
+        neural_temperature=1.5,
+        neural_exclude_input=True,
         initial_model="markov",
     )
     reg.load_markov()

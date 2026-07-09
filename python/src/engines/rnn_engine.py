@@ -10,7 +10,7 @@ from pathlib import Path
 import torch
 
 from ..chord_simplifier import ChordSimplifier
-from ..config import DEFAULT_FALLBACK
+from ..config import DEFAULT_FALLBACK, DEFAULT_NEURAL_EXCLUDE_INPUT, DEFAULT_NEURAL_TEMPERATURE
 from .base import SampleResult
 from .jazznet_checkpoint import load_checkpoint_state
 from .jazznet_inference import predict_next_index
@@ -30,10 +30,14 @@ class RnnEngine:
         epoch: int = 35,
         fallback: str = DEFAULT_FALLBACK,
         seed: int | None = None,
+        temperature: float = DEFAULT_NEURAL_TEMPERATURE,
+        exclude_input: bool = DEFAULT_NEURAL_EXCLUDE_INPUT,
     ) -> None:
         self._jazznet_dir = jazznet_dir
         self._epoch = epoch
         self._fallback = fallback
+        self._temperature = temperature
+        self._exclude_input = exclude_input
         self._rng = random.Random(seed)
         self._torch_gen = torch.Generator().manual_seed(seed) if seed is not None else None
         self._simplifier = ChordSimplifier()
@@ -130,6 +134,7 @@ class RnnEngine:
             return self._apply_fallback(chord)
 
         context = [self._vocab.bos_idx, idx]
+        exclude = {idx} if self._exclude_input else None
         try:
             next_idx, prob = predict_next_index(
                 self._model,
@@ -137,6 +142,8 @@ class RnnEngine:
                 vocab=self._vocab,
                 rnn=True,
                 generator=self._torch_gen,
+                temperature=self._temperature,
+                exclude_indices=exclude,
             )
         except ValueError as exc:
             return SampleResult(

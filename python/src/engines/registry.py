@@ -25,6 +25,8 @@ class EngineRegistry:
         jazznet_epoch: int,
         fallback: str,
         seed: int | None,
+        neural_temperature: float,
+        neural_exclude_input: bool,
         initial_model: str = DEFAULT_MODEL,
     ) -> None:
         self._csv_path = csv_path
@@ -32,6 +34,8 @@ class EngineRegistry:
         self._jazznet_epoch = jazznet_epoch
         self._fallback = fallback
         self._seed = seed
+        self._neural_temperature = neural_temperature
+        self._neural_exclude_input = neural_exclude_input
         self._lock = threading.Lock()
         self._table: TransitionTable | None = None
         self._markov: MarkovEngine | None = None
@@ -68,6 +72,8 @@ class EngineRegistry:
                 epoch=self._jazznet_epoch,
                 fallback=self._fallback,
                 seed=self._seed,
+                temperature=self._neural_temperature,
+                exclude_input=self._neural_exclude_input,
             )
         return self._rnn
 
@@ -78,6 +84,8 @@ class EngineRegistry:
                 epoch=self._jazznet_epoch,
                 fallback=self._fallback,
                 seed=self._seed,
+                temperature=self._neural_temperature,
+                exclude_input=self._neural_exclude_input,
             )
         return self._lstm
 
