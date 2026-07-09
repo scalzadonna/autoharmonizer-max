@@ -1,0 +1,2 @@
+.DS_Store
+data/jazznet/checkpoints/**/*.pt

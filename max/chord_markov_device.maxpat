@@ -24,7 +24,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 30.0, 20.0, 460.0, 20.0 ],
-					"text" : "Markov Chord Device v1 — Node for Max OSC bridge"
+					"text" : "Chord Generator v2 — Node for Max OSC bridge"
 				}
 
 			}
@@ -35,7 +35,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 30.0, 42.0, 500.0, 20.0 ],
-					"text" : "Click the G:7 message box to edit chord. npm install once, then ping/send."
+					"text" : "Click the G:7 message box to edit chord. npm install once, then ping/send. Pick model below."
 				}
 
 			}
@@ -129,6 +129,65 @@
 			}
 , 			{
 				"box" : 				{
+					"id" : "obj-model-label",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 30.0, 175.0, 120.0, 20.0 ],
+					"text" : "model"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-model-menu",
+					"maxclass" : "umenu",
+					"numinlets" : 1,
+					"numoutlets" : 3,
+					"outlettype" : [ "int", "", "" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 30.0, 200.0, 120.0, 22.0 ],
+					"items" : [ "markov", ",", "rnn", ",", "lstm" ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-prepend-model",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 170.0, 200.0, 95.0, 22.0 ],
+					"text" : "prepend model"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-model-display-label",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 620.0, 260.0, 80.0, 20.0 ],
+					"text" : "active model"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-model-display",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 620.0, 285.0, 120.0, 22.0 ],
+					"text" : "set markov"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-prepend-chord",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -217,10 +276,10 @@
 					"id" : "obj-route",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
-					"numoutlets" : 4,
-					"outlettype" : [ "", "", "", "" ],
-					"patching_rect" : [ 450.0, 210.0, 130.0, 22.0 ],
-					"text" : "route status output error"
+					"numoutlets" : 5,
+					"outlettype" : [ "", "", "", "", "" ],
+					"patching_rect" : [ 450.0, 210.0, 160.0, 22.0 ],
+					"text" : "route status output error model"
 				}
 
 			}
@@ -596,6 +655,27 @@
 				"patchline" : 				{
 					"destination" : [ "obj-node", 0 ],
 					"source" : [ "obj-msg-init", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-prepend-model", 0 ],
+					"source" : [ "obj-model-menu", 1 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-node", 0 ],
+					"source" : [ "obj-prepend-model", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-model-display", 0 ],
+					"source" : [ "obj-route", 3 ]
 				}
 
 			}

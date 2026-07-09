@@ -1,8 +1,16 @@
-# Autoharmonizer Max — Markov Chord Generator
+# Autoharmonizer Max — Chord Generator (Markov + JazzNet)
 
-A local Max + Python system that sends one chord symbol to a Python service over OSC/UDP and receives one next chord sampled from a first-order Markov chain. Chord labels (e.g. `G:7`, `C:maj7`) are treated as opaque strings in v1.
+A local Max + Python system that sends one chord symbol to a Python service over OSC/UDP and receives one next chord. Three backends are available:
 
-**Protocol version:** v1  
+| Model | Source |
+|---|---|
+| **markov** | First-order Markov chain from CSV (default) |
+| **rnn** | JazzNet baseline RNN (epoch 35) |
+| **lstm** | JazzNet ChordLSTM (epoch 35) |
+
+Chord labels (e.g. `G:7`, `C:maj7`) are treated as opaque strings; RNN/LSTM map them into a 115-chord JazzNet vocabulary when needed.
+
+**Protocol version:** v2  
 **Canonical spec:** [PLAN.md](PLAN.md)
 
 ## How it works
@@ -29,7 +37,7 @@ Max patch                         Python service
 | Python | 3.9+ |
 | Max | Max 8+ with Node for Max (included in standard installs) |
 | Max npm package | `node-osc` (installed once via patch button or `npm install` in `max/`) |
-| Python packages | `python-osc`, `pytest` (see `python/requirements.txt`) |
+| Python packages | `python-osc`, `torch`, `pytest` (see `python/requirements.txt`) |
 
 ## Quick start
 
@@ -40,7 +48,16 @@ cd python
 python3 -m pip install -r requirements.txt
 ```
 
-### 2. Start the Python service
+### 2. Fetch JazzNet checkpoints (required for RNN/LSTM)
+
+```bash
+cd python
+python3 scripts/fetch_jazznet_assets.py --branch train --epoch 35
+```
+
+This downloads vocab and checkpoints into `data/jazznet/`.
+
+### 3. Start the Python service
 
 ```bash
 cd python
@@ -49,17 +66,18 @@ python3 -m src.main
 
 You should see log output confirming the CSV loaded and the OSC server is listening on `127.0.0.1:9000`.
 
-### 3. Open the Max patch
+### 4. Open the Max patch
 
 Open [`max/chord_markov_device.maxpat`](max/chord_markov_device.maxpat) in Max.
 
 **First time only:** click **npm install** in the patch (or run `npm install` in the `max/` folder).
 
 1. Click **ping** — status should show `ready` when `/status/pong` is received.
-2. Enter a chord (e.g. `G:7`) and click **send**.
-3. The sampled next chord appears in **output** (e.g. `C:maj` or `C:maj7`).
+2. Pick a **model** from the menu (`markov`, `rnn`, or `lstm`).
+3. Enter a chord (e.g. `G:7`) and click **send**.
+4. The sampled next chord appears in **output** (e.g. `C:maj` or `C:maj7`).
 
-### 4. Verify without Max (optional)
+### 5. Verify without Max (optional)
 
 ```bash
 cd python
@@ -78,6 +96,9 @@ Settings are passed via **CLI flags** or **environment variables** (env vars ove
 
 | Setting | CLI flag | Env var | Default |
 |---|---|---|---|
+| Active model | `--model` | `CHORD_MODEL` | `markov` |
+| JazzNet dir | `--jazznet-dir` | `JAZZNET_DIR` | `data/jazznet` |
+| JazzNet epoch | `--jazznet-epoch` | `JAZZNET_EPOCH` | `35` |
 | CSV path | `--csv` | `MARKOV_CSV` | `data/markov_openbook.csv` |
 | Bind host | `--host` | `MARKOV_HOST` | `127.0.0.1` |
 | Listen port | `--port` | `MARKOV_PORT` | `9000` |
@@ -87,7 +108,13 @@ Settings are passed via **CLI flags** or **environment variables** (env vars ove
 | Debug OSC | `--debug` | `MARKOV_DEBUG` | off |
 | Random seed | `--seed` | `MARKOV_SEED` | unset |
 
-Example with deterministic sampling:
+Example with LSTM backend:
+
+```bash
+CHORD_MODEL=lstm python3 -m src.main
+```
+
+Example with deterministic Markov sampling:
 
 ```bash
 MARKOV_SEED=42 python3 -m src.main --csv ../data/markov_openbook.csv --debug
@@ -115,6 +142,8 @@ When an unknown chord is received, Python emits `/error` and applies the configu
 | Max → Python | `/control/ping` | _(none)_ |
 | Python → Max | `/status/pong` | int `1` |
 | Max → Python | `/control/reload` | _(none)_ |
+| Max → Python | `/control/model` | string (`markov`, `rnn`, `lstm`) |
+| Python → Max | `/status/model` | string |
 
 Full contract: [PLAN.md](PLAN.md) · [docs/osc_contract.md](docs/osc_contract.md)
 

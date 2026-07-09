@@ -1,5 +1,5 @@
 /**
- * Markov chord OSC bridge for Max (protocol v1).
+ * Chord generator OSC bridge for Max (protocol v2).
  * Uses node-osc instead of CNMAT externals.
  */
 
@@ -8,7 +8,7 @@ const Max = require("max-api");
 const PYTHON_HOST = "127.0.0.1";
 const PYTHON_PORT = 9000;
 const MAX_PORT = 9001;
-const REPLY_TIMEOUT_MS = 500;
+const REPLY_TIMEOUT_MS = 1500;
 
 let client = null;
 let server = null;
@@ -37,6 +37,11 @@ function emit(address, args) {
 
   if (address === "/status/ready" || address === "/status/pong") {
     Max.outlet(["status", "ready"]);
+    return;
+  }
+
+  if (address === "/status/model") {
+    Max.outlet(["model", String(args[0] ?? "markov")]);
     return;
   }
 
@@ -167,4 +172,19 @@ Max.addHandler("reload", () => {
   }
 });
 
-Max.post("markov_osc.js loaded — click npm install once if needed");
+Max.addHandler("model", (...args) => {
+  const name = args.map((a) => String(a ?? "").trim()).filter(Boolean).join(" ").trim();
+  if (!name) {
+    Max.outlet(["error", "empty model name"]);
+    return;
+  }
+  try {
+    initOsc();
+    sendOsc("/control/model", name);
+  } catch (err) {
+    Max.post(err.stack || err);
+    Max.outlet(["error", String(err.message || err)]);
+  }
+});
+
+Max.post("markov_osc.js loaded (v2) — click npm install once if needed");

@@ -1,4 +1,4 @@
-"""Configuration and OSC protocol constants (v1)."""
+"""Configuration and OSC protocol constants (v2)."""
 
 from __future__ import annotations
 
@@ -7,23 +7,29 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-PROTOCOL_VERSION = "v1"
+PROTOCOL_VERSION = "v2"
 
 # OSC addresses — keep in sync with PLAN.md and max/chord_markov_device.maxpat
 OSC_CHORD_INPUT = "/chord/input"
 OSC_CHORD_OUTPUT = "/chord/output"
 OSC_STATUS_READY = "/status/ready"
 OSC_STATUS_PONG = "/status/pong"
+OSC_STATUS_MODEL = "/status/model"
 OSC_ERROR = "/error"
 OSC_CONTROL_PING = "/control/ping"
 OSC_CONTROL_RELOAD = "/control/reload"
+OSC_CONTROL_MODEL = "/control/model"
 OSC_DEBUG_PROBABILITY = "/debug/probability"
 OSC_DEBUG_CANDIDATES = "/debug/candidates"
 OSC_DEBUG_INPUT_ECHO = "/debug/input_echo"
 OSC_DEBUG_FALLBACK_USED = "/debug/fallback_used"
+OSC_DEBUG_MODEL = "/debug/model"
 
 FALLBACK_POLICIES = ("echo_input", "global_top", "random_source", "error_only")
 DEFAULT_FALLBACK = "echo_input"
+
+MODEL_NAMES = ("markov", "rnn", "lstm")
+DEFAULT_MODEL = "markov"
 
 PROB_SUM_TOLERANCE = 0.01
 
@@ -50,6 +56,19 @@ def resolve_csv_path(path: str | Path) -> Path:
     raise FileNotFoundError(f"CSV file not found: {path}")
 
 
+def resolve_jazznet_dir(path: str | Path) -> Path:
+    """Resolve JazzNet data directory relative to repo root when needed."""
+    candidate = Path(path)
+    if candidate.is_dir():
+        return candidate.resolve()
+
+    from_root = repo_root() / path
+    if from_root.is_dir():
+        return from_root.resolve()
+
+    return candidate.resolve()
+
+
 def _env_bool(name: str) -> bool | None:
     raw = os.environ.get(name)
     if raw is None:
@@ -67,6 +86,9 @@ def _env_int(name: str) -> int | None:
 @dataclass(frozen=True)
 class Settings:
     csv_path: Path
+    jazznet_dir: Path
+    jazznet_epoch: int
+    model: str
     host: str
     port: int
     max_host: str
@@ -77,9 +99,28 @@ class Settings:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    default_csv = str(repo_root() / "data" / "markov_openbook.csv")
-    parser = argparse.ArgumentParser(description="Markov chord OSC service")
-    parser.add_argument("--csv", default=default_csv, help="Path to transition CSV")
+    root = repo_root()
+    default_csv = str(root / "data" / "markov_openbook.csv")
+    default_jazznet = str(root / "data" / "jazznet")
+    parser = argparse.ArgumentParser(description="Chord generator OSC service")
+    parser.add_argument("--csv", default=default_csv, help="Path to Markov transition CSV")
+    parser.add_argument(
+        "--jazznet-dir",
+        default=default_jazznet,
+        help="JazzNet checkpoints and vocab directory",
+    )
+    parser.add_argument(
+        "--jazznet-epoch",
+        type=int,
+        default=35,
+        help="JazzNet checkpoint epoch",
+    )
+    parser.add_argument(
+        "--model",
+        choices=MODEL_NAMES,
+        default=DEFAULT_MODEL,
+        help="Active chord generation backend",
+    )
     parser.add_argument("--host", default="127.0.0.1", help="Bind host")
     parser.add_argument("--port", type=int, default=9000, help="Listen port")
     parser.add_argument("--max-host", default="127.0.0.1", help="Max reply host")
@@ -100,6 +141,12 @@ def load_settings(argv: list[str] | None = None) -> Settings:
     args = parser.parse_args(argv)
 
     csv_path = resolve_csv_path(os.environ.get("MARKOV_CSV", args.csv))
+    jazznet_dir = resolve_jazznet_dir(os.environ.get("JAZZNET_DIR", args.jazznet_dir))
+    jazznet_epoch = _env_int("JAZZNET_EPOCH") or args.jazznet_epoch
+    model = os.environ.get("CHORD_MODEL", args.model)
+    if model not in MODEL_NAMES:
+        raise ValueError(f"Invalid model: {model}")
+
     host = os.environ.get("MARKOV_HOST", args.host)
     port = _env_int("MARKOV_PORT") or args.port
     max_host = os.environ.get("MARKOV_MAX_HOST", args.max_host)
@@ -116,10 +163,13 @@ def load_settings(argv: list[str] | None = None) -> Settings:
         seed = args.seed
 
     if host != "127.0.0.1":
-        raise ValueError("v1 requires binding to 127.0.0.1 only")
+        raise ValueError("v2 requires binding to 127.0.0.1 only")
 
     return Settings(
         csv_path=csv_path,
+        jazznet_dir=jazznet_dir,
+        jazznet_epoch=jazznet_epoch,
+        model=model,
         host=host,
         port=port,
         max_host=max_host,

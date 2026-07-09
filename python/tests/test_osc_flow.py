@@ -17,6 +17,7 @@ from src.osc_service import MarkovOscService
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CSV_PATH = REPO_ROOT / "data" / "markov_openbook.csv"
+JAZZNET_DIR = REPO_ROOT / "data" / "jazznet"
 
 
 def _free_port() -> int:
@@ -25,13 +26,12 @@ def _free_port() -> int:
         return sock.getsockname()[1]
 
 
-@pytest.fixture
-def osc_service():
-    python_port = _free_port()
-    max_port = _free_port()
-
-    settings = Settings(
+def _settings(python_port: int, max_port: int) -> Settings:
+    return Settings(
         csv_path=CSV_PATH,
+        jazznet_dir=JAZZNET_DIR,
+        jazznet_epoch=35,
+        model="markov",
         host="127.0.0.1",
         port=python_port,
         max_host="127.0.0.1",
@@ -40,6 +40,14 @@ def osc_service():
         debug=False,
         seed=42,
     )
+
+
+@pytest.fixture
+def osc_service():
+    python_port = _free_port()
+    max_port = _free_port()
+
+    settings = _settings(python_port, max_port)
     service = MarkovOscService(settings)
 
     received: dict[str, list] = {"messages": []}
@@ -112,3 +120,16 @@ def test_unknown_chord_error_and_echo(osc_service):
     outputs = [args[0] for addr, args in new_messages if addr == "/chord/output"]
     assert errors
     assert outputs[-1] == "X:???"
+
+
+def test_model_switch_status(osc_service):
+    client, received = osc_service
+    before = len(received["messages"])
+    client.send_message("/control/model", ["lstm"])
+    time.sleep(2.0)
+
+    models = [args[0] for addr, args in received["messages"][before:] if addr == "/status/model"]
+    if not (JAZZNET_DIR / "checkpoints" / "lstm" / "ChordLSTM-epoch35.pt").is_file():
+        pytest.skip("JazzNet checkpoints not fetched")
+    assert models
+    assert models[-1] == "lstm"
