@@ -10,7 +10,7 @@ A local Max + Python system that sends one chord symbol to a Python service over
 
 Chord labels (e.g. `G:7`, `C:maj7`) are treated as opaque strings; RNN/LSTM map them into a 115-chord JazzNet vocabulary when needed.
 
-**Protocol version:** v2  
+**Protocol version:** v3  
 **Canonical spec:** [PLAN.md](PLAN.md)  
 **Colleague testing guide:** [docs/TESTING.md](docs/TESTING.md) ← start here for setup and verification
 
@@ -78,6 +78,7 @@ Open [`max/chord_generator_device.maxpat`](max/chord_generator_device.maxpat) in
 2. Pick a **model** from the menu (`markov`, `rnn`, or `lstm`).
 3. Pick a **chord** from the menu (default: `C:maj7`) and click **send**.
 4. The sampled next chord appears in **output** (e.g. `C:maj` or `G:7`).
+5. With **rnn** or **lstm**, send several chords — **session step** should increment (session is on by default).
 
 ### 5. Verify without Max (optional)
 
@@ -111,6 +112,9 @@ Settings are passed via **CLI flags** or **environment variables** (env vars ove
 | Random seed | `--seed` | `MARKOV_SEED` | unset |
 | Neural temperature | `--neural-temperature` | `NEURAL_TEMPERATURE` | `1.5` |
 | Exclude input chord (RNN/LSTM) | `--neural-exclude-input` / `--no-neural-exclude-input` | `NEURAL_EXCLUDE_INPUT` | on |
+| Session mode | `--session-mode` | `SESSION_MODE` | `auto` |
+| Session max steps | `--session-max-steps` | `SESSION_MAX_STEPS` | `64` |
+| Auto-feed model output | `--session-auto-feed` / `--no-session-auto-feed` | `SESSION_AUTO_FEED` | on |
 
 Example with LSTM backend and default neural sampling:
 
@@ -118,7 +122,9 @@ Example with LSTM backend and default neural sampling:
 python3 -m src.main --model lstm
 ```
 
-RNN/LSTM defaults use **temperature 1.5** and **exclude input chord** so each step tends to produce a transition rather than echoing the same symbol. To restore the original peaked sampling:
+RNN/LSTM with **`--session-mode auto`** (default) run in **session mode**: hidden state carries across chord steps, and the model's output is auto-fed into the session. Markov always stays stateless. Force single-step (legacy) behavior with `--session-mode stateless`.
+
+RNN/LSTM defaults use **temperature 1.5** and **exclude input chord** on the first session step so each chain tends to produce a transition rather than echoing the input. To restore the original peaked sampling:
 
 ```bash
 python3 -m src.main --model lstm --neural-temperature 1.0 --no-neural-exclude-input
@@ -245,7 +251,7 @@ G:7,C:maj7,241,0.2105
 | File | Purpose |
 |---|---|
 | `chord_generator_device.maxpat` | Max patch: chord input, **model switcher**, send/ping/reload, status/output/error |
-| `markov_osc.js` | Node-for-Max bridge (v2): `/control/model`, 1500 ms reply timeout |
+| `markov_osc.js` | Node-for-Max bridge (v3): model + session control, 1500 ms reply timeout |
 | `package.json` | Declares `node-osc` npm dependency for the bridge script |
 | `README.md` | Max-specific controls, ports, and troubleshooting |
 

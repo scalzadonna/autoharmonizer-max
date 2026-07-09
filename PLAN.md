@@ -921,3 +921,72 @@ Validation gate:
 ## Definition of done (v2)
 
 The v2 integration is complete when the Max patch exposes a three-way model switcher; Python serves Markov, JazzNet RNN, and JazzNet LSTM backends over the existing OSC transport; checkpoints are vendored via documented fetch script; and a user can send `G:7` in any mode and receive a valid next-chord reply with the same UX as v1 Markov sampling.
+
+---
+
+# v3 — Stateful session mode (Phase 12)
+
+## Objective (v3)
+
+Extend RNN/LSTM backends so chord steps **accumulate hidden state** across `/chord/input` calls. Markov stays first-order (stateless). Same Max UX: one chord in, one chord out.
+
+## Scope (v3)
+
+### In scope
+
+- `NeuralSessionState` with RNN/LSTM hidden carry-over
+- Auto-feed model output token into session after each sample
+- Session **auto** default: enabled for `rnn`/`lstm`, disabled for `markov`
+- Auto-reset after `SESSION_MAX_STEPS` (default 64) user steps
+- OSC: `/control/session`, `/status/session`, `/debug/session_history`
+- Max patch session menu + reset button + step display
+- Tests for session step increment, reset, model switch, max-steps auto-reset
+
+### Out of scope for v3
+
+- Higher-order Markov chains (Phase 13)
+- Full multi-chord progression endpoint without per-step user input
+
+## Session semantics
+
+| Setting | Behavior |
+|---|---|
+| `auto` (default) | Session on for RNN/LSTM; off for Markov |
+| `stateless` | Single-step `[BOS, input]` for all models |
+| `session` | Force session for RNN/LSTM |
+| `reset` | Clear hidden state and step counter |
+
+Each user `/chord/input`:
+
+1. Forward user chord through model (with carried hidden after step 1)
+2. Sample and return next chord
+3. Auto-feed sampled chord into hidden state (default on)
+
+Reset triggers: explicit `/control/session reset`, model switch, session mode → `stateless`, max steps reached.
+
+## OSC additions (v3)
+
+| Direction | Address | Payload |
+|---|---|---|
+| Max → Python | `/control/session` | `auto` \| `stateless` \| `session` \| `reset` |
+| Python → Max | `/status/session` | string mode, int step |
+| Python → Max | `/debug/session_history` | string (debug only) |
+
+## Phase 12 deliverables
+
+- `python/src/engines/neural_session.py`, `neural_sampler.py`
+- `predict_step()` / `forward_token()` in `jazznet_inference.py`
+- Registry + OSC wiring; protocol bump to **v3**
+- Max `session` umenu, **reset session** button, step display
+- `test_neural_session.py` + OSC integration tests
+
+## Validation gate
+
+- 81+ pytest tests pass
+- RNN/LSTM with `auto`: step increments across sends; reset clears step
+- Markov unchanged (stateless)
+- v2 single-step behavior available via `--session-mode stateless`
+
+## Definition of done (v3)
+
+The v3 session integration is complete when RNN/LSTM backends remember chord context across Max sends (with auto-feed and auto-reset), Markov behavior is unchanged, and the Max patch exposes session controls with step feedback over OSC.

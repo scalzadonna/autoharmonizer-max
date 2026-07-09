@@ -183,6 +183,9 @@ def neural_registry() -> EngineRegistry:
         seed=42,
         neural_temperature=1.5,
         neural_exclude_input=True,
+        session_mode="auto",
+        session_max_steps=64,
+        session_auto_feed=True,
         initial_model="markov",
     )
     reg.load_markov()
@@ -230,6 +233,9 @@ def osc_neural_service():
         seed=42,
         neural_temperature=1.5,
         neural_exclude_input=True,
+        session_mode="auto",
+        session_max_steps=64,
+        session_auto_feed=True,
     )
     service = ChordOscService(settings)
     received: dict[str, list] = {"messages": []}

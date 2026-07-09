@@ -1,4 +1,4 @@
-# Chord Generator Max Device (protocol v2)
+# Chord Generator Max Device (protocol v3)
 
 Standalone Max/MSP patch that sends chord symbols to the Python chord service and displays the sampled reply. Supports three backends: **markov**, **rnn**, and **lstm**.
 
@@ -45,8 +45,9 @@ npm install
 2. Select a **model** from the menu: `markov`, `rnn`, or `lstm`.
 3. **active model** should match your selection (after `/status/model` from Python).
 4. Select a **chord** from the menu (default: `C:maj7`), then click **send** — the next chord appears in **output**.
-5. Click **reload** to reload the Markov CSV without restarting Python.
-6. After updating `markov_osc.js`, click **restart js**.
+5. For **rnn** / **lstm**, session mode is **auto** by default — send several chords and watch **session step** increment. Use **reset session** to clear hidden state.
+6. Click **reload** to reload the Markov CSV without restarting Python.
+7. After updating `markov_osc.js`, click **restart js**.
 
 ## Default ports
 
@@ -62,6 +63,8 @@ Ports are set in `markov_osc.js`. Change them there if you use non-default Pytho
 | UI | Action |
 |---|---|
 | **model** (umenu) | Sends `/control/model` with `markov`, `rnn`, or `lstm` |
+| **session** (umenu) | Sends `/control/session` with `auto`, `stateless`, or `session` |
+| **reset session** | Sends `/control/session reset` |
 | **npm install** | Runs `script npm install` to fetch `node-osc` (first time only) |
 | **ping** | Sends `/control/ping` |
 | **chord** (umenu) | Select input chord (default `C:maj7`) |
@@ -70,6 +73,7 @@ Ports are set in `markov_osc.js`. Change them there if you use non-default Pytho
 | **restart js** | Restarts the Node bridge after JS edits |
 | status | Shows `ready` or `waiting` |
 | active model | Last `/status/model` from Python |
+| session | Last `/status/session` (mode + step) |
 | output | Last `/chord/output` chord symbol |
 | error | Last `/error` or `reply timeout` (1500 ms) |
 
@@ -77,14 +81,15 @@ Ports are set in `markov_osc.js`. Change them there if you use non-default Pytho
 
 - Default model on Python startup is **markov** unless you set `CHORD_MODEL=lstm` (etc.) before launch.
 - First selection of **rnn** or **lstm** triggers checkpoint load in Python (~2–5 s). Wait for **active model** to update before sending chords.
-- RNN/LSTM may return the same chord as the input when `--neural-temperature 1.0 --no-neural-exclude-input` is set; defaults avoid this.
+- RNN/LSTM use **session mode by default** (`auto`): hidden state accumulates across sends; model output is auto-fed. Set session menu to **stateless** for single-step behavior.
+- RNN/LSTM may return the same chord as the input when `--neural-temperature 1.0 --no-neural-exclude-input --session-mode stateless` is set; defaults avoid this.
 
 ## Files in this folder
 
 | File | Purpose |
 |---|---|
 | `chord_generator_device.maxpat` | Max UI with model switcher + Node bridge |
-| `markov_osc.js` | Node-for-Max OSC client/server (v2) |
+| `markov_osc.js` | Node-for-Max OSC client/server (v3) |
 | `package.json` | npm dependency on `node-osc` |
 
 ## Troubleshooting

@@ -41,6 +41,9 @@ def _settings(python_port: int, max_port: int) -> Settings:
         seed=42,
         neural_temperature=1.5,
         neural_exclude_input=True,
+        session_mode="auto",
+        session_max_steps=64,
+        session_auto_feed=True,
     )
 
 
@@ -135,3 +138,44 @@ def test_model_switch_status(osc_service):
         pytest.skip("JazzNet checkpoints not fetched")
     assert models
     assert models[-1] == "lstm"
+
+
+def test_session_status_on_ping(osc_service):
+    client, received = osc_service
+    before = len(received["messages"])
+    client.send_message("/control/ping", [])
+    time.sleep(0.2)
+
+    sessions = [
+        args
+        for addr, args in received["messages"][before:]
+        if addr == "/status/session"
+    ]
+    assert sessions
+    mode, step = sessions[-1]
+    assert mode == "stateless"
+    assert step == 0
+
+
+@pytest.mark.skipif(
+    not (JAZZNET_DIR / "checkpoints" / "rnn" / "baselineRNN-epoch35.pt").is_file(),
+    reason="JazzNet checkpoints not fetched",
+)
+def test_session_mode_rnn(osc_service):
+    client, received = osc_service
+    client.send_message("/control/model", ["rnn"])
+    time.sleep(2.0)
+
+    before = len(received["messages"])
+    client.send_message("/chord/input", ["G:7"])
+    time.sleep(0.5)
+
+    sessions = [
+        args
+        for addr, args in received["messages"][before:]
+        if addr == "/status/session"
+    ]
+    assert sessions
+    mode, step = sessions[-1]
+    assert mode == "session"
+    assert step == 1

@@ -1,4 +1,4 @@
-"""Configuration and OSC protocol constants (v2)."""
+"""Configuration and OSC protocol constants (v3)."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-PROTOCOL_VERSION = "v2"
+PROTOCOL_VERSION = "v3"
 
 # OSC addresses — keep in sync with PLAN.md and max/chord_generator_device.maxpat
 OSC_CHORD_INPUT = "/chord/input"
@@ -15,15 +15,18 @@ OSC_CHORD_OUTPUT = "/chord/output"
 OSC_STATUS_READY = "/status/ready"
 OSC_STATUS_PONG = "/status/pong"
 OSC_STATUS_MODEL = "/status/model"
+OSC_STATUS_SESSION = "/status/session"
 OSC_ERROR = "/error"
 OSC_CONTROL_PING = "/control/ping"
 OSC_CONTROL_RELOAD = "/control/reload"
 OSC_CONTROL_MODEL = "/control/model"
+OSC_CONTROL_SESSION = "/control/session"
 OSC_DEBUG_PROBABILITY = "/debug/probability"
 OSC_DEBUG_CANDIDATES = "/debug/candidates"
 OSC_DEBUG_INPUT_ECHO = "/debug/input_echo"
 OSC_DEBUG_FALLBACK_USED = "/debug/fallback_used"
 OSC_DEBUG_MODEL = "/debug/model"
+OSC_DEBUG_SESSION_HISTORY = "/debug/session_history"
 
 FALLBACK_POLICIES = ("echo_input", "global_top", "random_source", "error_only")
 DEFAULT_FALLBACK = "echo_input"
@@ -33,6 +36,11 @@ DEFAULT_MODEL = "markov"
 
 DEFAULT_NEURAL_TEMPERATURE = 1.5
 DEFAULT_NEURAL_EXCLUDE_INPUT = True
+
+SESSION_MODES = ("auto", "stateless", "session")
+DEFAULT_SESSION_MODE = "auto"
+DEFAULT_SESSION_MAX_STEPS = 64
+DEFAULT_SESSION_AUTO_FEED = True
 
 PROB_SUM_TOLERANCE = 0.01
 
@@ -108,6 +116,9 @@ class Settings:
     seed: int | None
     neural_temperature: float
     neural_exclude_input: bool
+    session_mode: str
+    session_max_steps: int
+    session_auto_feed: bool
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -157,6 +168,24 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_NEURAL_EXCLUDE_INPUT,
         help="Mask input chord token when sampling RNN/LSTM (force transition)",
     )
+    parser.add_argument(
+        "--session-mode",
+        choices=SESSION_MODES,
+        default=DEFAULT_SESSION_MODE,
+        help="Session mode: auto (session for rnn/lstm), stateless, or session",
+    )
+    parser.add_argument(
+        "--session-max-steps",
+        type=int,
+        default=DEFAULT_SESSION_MAX_STEPS,
+        help="Auto-reset neural session after this many user chord steps",
+    )
+    parser.add_argument(
+        "--session-auto-feed",
+        action=argparse.BooleanOptionalAction,
+        default=DEFAULT_SESSION_AUTO_FEED,
+        help="Auto-feed model output token into session hidden state",
+    )
     return parser
 
 
@@ -197,8 +226,23 @@ def load_settings(argv: list[str] | None = None) -> Settings:
         exclude_env if exclude_env is not None else args.neural_exclude_input
     )
 
+    session_mode = os.environ.get("SESSION_MODE", args.session_mode)
+    if session_mode not in SESSION_MODES:
+        raise ValueError(f"Invalid session mode: {session_mode}")
+
+    session_max_steps = _env_int("SESSION_MAX_STEPS")
+    if session_max_steps is None:
+        session_max_steps = args.session_max_steps
+    if session_max_steps <= 0:
+        raise ValueError(f"session max steps must be > 0, got {session_max_steps}")
+
+    auto_feed_env = _env_bool("SESSION_AUTO_FEED")
+    session_auto_feed = (
+        auto_feed_env if auto_feed_env is not None else args.session_auto_feed
+    )
+
     if host != "127.0.0.1":
-        raise ValueError("v2 requires binding to 127.0.0.1 only")
+        raise ValueError("v3 requires binding to 127.0.0.1 only")
 
     return Settings(
         csv_path=csv_path,
@@ -214,4 +258,7 @@ def load_settings(argv: list[str] | None = None) -> Settings:
         seed=seed,
         neural_temperature=neural_temperature,
         neural_exclude_input=neural_exclude_input,
+        session_mode=session_mode,
+        session_max_steps=session_max_steps,
+        session_auto_feed=session_auto_feed,
     )

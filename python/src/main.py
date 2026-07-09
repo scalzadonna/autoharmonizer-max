@@ -25,7 +25,8 @@ def main(argv: list[str] | None = None) -> int:
     logger.info("starting chord service protocol=%s", PROTOCOL_VERSION)
     logger.info(
         "config model=%s csv=%s jazznet=%s epoch=%s host=%s port=%s max=%s:%s "
-        "fallback=%s seed=%s neural_temp=%s neural_exclude_input=%s debug=%s",
+        "fallback=%s seed=%s neural_temp=%s neural_exclude_input=%s "
+        "session_mode=%s session_max_steps=%s session_auto_feed=%s debug=%s",
         settings.model,
         settings.csv_path,
         settings.jazznet_dir,
@@ -38,6 +39,9 @@ def main(argv: list[str] | None = None) -> int:
         settings.seed,
         settings.neural_temperature,
         settings.neural_exclude_input,
+        settings.session_mode,
+        settings.session_max_steps,
+        settings.session_auto_feed,
         settings.debug,
     )
 

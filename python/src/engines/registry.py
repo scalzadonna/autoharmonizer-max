@@ -6,7 +6,7 @@ import logging
 import threading
 from pathlib import Path
 
-from ..config import DEFAULT_MODEL, MODEL_NAMES
+from ..config import DEFAULT_MODEL, DEFAULT_SESSION_MODE, MODEL_NAMES, SESSION_MODES
 from ..csv_loader import TransitionTable, load_transition_table
 from .base import ChordEngine, SampleResult
 from .lstm_engine import LstmEngine
@@ -27,6 +27,9 @@ class EngineRegistry:
         seed: int | None,
         neural_temperature: float,
         neural_exclude_input: bool,
+        session_mode: str = DEFAULT_SESSION_MODE,
+        session_max_steps: int,
+        session_auto_feed: bool,
         initial_model: str = DEFAULT_MODEL,
     ) -> None:
         self._csv_path = csv_path
@@ -36,6 +39,9 @@ class EngineRegistry:
         self._seed = seed
         self._neural_temperature = neural_temperature
         self._neural_exclude_input = neural_exclude_input
+        self._session_mode = session_mode if session_mode in SESSION_MODES else DEFAULT_SESSION_MODE
+        self._session_max_steps = session_max_steps
+        self._session_auto_feed = session_auto_feed
         self._lock = threading.Lock()
         self._table: TransitionTable | None = None
         self._markov: MarkovEngine | None = None
@@ -47,6 +53,41 @@ class EngineRegistry:
     def active_name(self) -> str:
         with self._lock:
             return self._active_name
+
+    @property
+    def session_mode(self) -> str:
+        with self._lock:
+            return self._session_mode
+
+    def session_status(self) -> tuple[str, int]:
+        """Return effective session label and current step count."""
+        with self._lock:
+            name = self._active_name
+            mode = self._session_mode
+
+        if not self._effective_session(name, mode):
+            return "stateless", 0
+
+        engine = self._engine_for(name)
+        if isinstance(engine, (RnnEngine, LstmEngine)):
+            return "session", engine.session.step
+        return "session", 0
+
+    def session_history(self) -> str:
+        with self._lock:
+            name = self._active_name
+        if name == "rnn" and self._rnn is not None:
+            return self._rnn.session.history_display()
+        if name == "lstm" and self._lstm is not None:
+            return self._lstm.session.history_display()
+        return ""
+
+    def _effective_session(self, model_name: str, session_mode: str) -> bool:
+        if model_name == "markov":
+            return False
+        if session_mode == "stateless":
+            return False
+        return True
 
     def load_markov(self) -> TransitionTable:
         table = load_transition_table(self._csv_path)
@@ -74,6 +115,8 @@ class EngineRegistry:
                 seed=self._seed,
                 temperature=self._neural_temperature,
                 exclude_input=self._neural_exclude_input,
+                session_max_steps=self._session_max_steps,
+                session_auto_feed=self._session_auto_feed,
             )
         return self._rnn
 
@@ -86,6 +129,8 @@ class EngineRegistry:
                 seed=self._seed,
                 temperature=self._neural_temperature,
                 exclude_input=self._neural_exclude_input,
+                session_max_steps=self._session_max_steps,
+                session_auto_feed=self._session_auto_feed,
             )
         return self._lstm
 
@@ -99,6 +144,27 @@ class EngineRegistry:
         if name == "lstm":
             return self._get_lstm()
         raise ValueError(f"Unknown model: {name}")
+
+    def reset_session(self) -> None:
+        if self._rnn is not None:
+            self._rnn.reset_session()
+        if self._lstm is not None:
+            self._lstm.reset_session()
+        logger.info("neural session reset")
+
+    def set_session_mode(self, mode: str) -> tuple[bool, str | None]:
+        normalized = mode.strip().lower()
+        if normalized == "reset":
+            self.reset_session()
+            return True, None
+        if normalized not in SESSION_MODES:
+            return False, f"invalid session mode: {mode}"
+        with self._lock:
+            self._session_mode = normalized
+        if normalized == "stateless":
+            self.reset_session()
+        logger.info("session mode set to %s", normalized)
+        return True, None
 
     def set_model(self, name: str) -> tuple[bool, str | None]:
         if name not in MODEL_NAMES:
@@ -118,13 +184,16 @@ class EngineRegistry:
                 self._active_name = previous
             return False, f"failed to load {name}: {exc}"
 
+        self.reset_session()
         logger.info("active model set to %s", name)
         return True, None
 
     def sample(self, raw_input: str) -> SampleResult:
         with self._lock:
             name = self._active_name
-        return self._engine_for(name).sample(raw_input)
+            mode = self._session_mode
+        session = self._effective_session(name, mode)
+        return self._engine_for(name).sample(raw_input, session=session)
 
     def reload_markov(self) -> None:
         self.load_markov()

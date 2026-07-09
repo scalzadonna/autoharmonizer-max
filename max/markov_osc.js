@@ -1,5 +1,5 @@
 /**
- * Chord generator OSC bridge for Max (protocol v2).
+ * Chord generator OSC bridge for Max (protocol v3).
  * Uses node-osc instead of CNMAT externals.
  */
 
@@ -42,6 +42,13 @@ function emit(address, args) {
 
   if (address === "/status/model") {
     Max.outlet(["model", String(args[0] ?? "markov")]);
+    return;
+  }
+
+  if (address === "/status/session") {
+    const mode = String(args[0] ?? "stateless");
+    const step = Number(args[1] ?? 0);
+    Max.outlet(["session", `set ${mode} ${step}`]);
     return;
   }
 
@@ -187,4 +194,29 @@ Max.addHandler("model", (...args) => {
   }
 });
 
-Max.post("markov_osc.js loaded (v2) — click npm install once if needed");
+Max.addHandler("session", (...args) => {
+  const mode = args.map((a) => String(a ?? "").trim()).filter(Boolean).join(" ").trim();
+  if (!mode) {
+    Max.outlet(["error", "empty session mode"]);
+    return;
+  }
+  try {
+    initOsc();
+    sendOsc("/control/session", mode);
+  } catch (err) {
+    Max.post(err.stack || err);
+    Max.outlet(["error", String(err.message || err)]);
+  }
+});
+
+Max.addHandler("reset_session", () => {
+  try {
+    initOsc();
+    sendOsc("/control/session", "reset");
+  } catch (err) {
+    Max.post(err.stack || err);
+    Max.outlet(["error", String(err.message || err)]);
+  }
+});
+
+Max.post("markov_osc.js loaded (v3) — click npm install once if needed");

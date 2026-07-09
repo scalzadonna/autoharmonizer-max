@@ -23,6 +23,9 @@ def registry():
         seed=42,
         neural_temperature=1.5,
         neural_exclude_input=True,
+        session_mode="auto",
+        session_max_steps=64,
+        session_auto_feed=True,
         initial_model="markov",
     )
     reg.load_markov()

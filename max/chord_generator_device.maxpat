@@ -24,7 +24,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 30.0, 20.0, 460.0, 20.0 ],
-					"text" : "Chord Generator v2 — Node for Max OSC bridge"
+					"text" : "Chord Generator v3 — Node for Max OSC bridge"
 				}
 
 			}
@@ -35,7 +35,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 30.0, 42.0, 500.0, 20.0 ],
-					"text" : "Pick a chord from the menu, then ping/send. npm install once. Pick model below."
+					"text" : "Pick a chord from the menu, then ping/send. npm install once. Pick model and session below."
 				}
 
 			}
@@ -149,6 +149,114 @@
 					"parameter_enable" : 0,
 					"patching_rect" : [ 30.0, 200.0, 120.0, 22.0 ],
 					"items" : [ "markov", ",", "rnn", ",", "lstm" ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-session-label",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 280.0, 175.0, 120.0, 20.0 ],
+					"text" : "session"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-session-menu",
+					"maxclass" : "umenu",
+					"numinlets" : 1,
+					"numoutlets" : 3,
+					"outlettype" : [ "int", "", "" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 280.0, 200.0, 120.0, 22.0 ],
+					"items" : [ "auto", ",", "stateless", ",", "session" ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-prepend-session",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 420.0, 200.0, 105.0, 22.0 ],
+					"text" : "prepend session"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-btn-reset-session",
+					"maxclass" : "textbutton",
+					"numinlets" : 1,
+					"numoutlets" : 3,
+					"outlettype" : [ "", "", "" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 540.0, 200.0, 90.0, 22.0 ],
+					"text" : "reset session"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-msg-reset-session",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 540.0, 170.0, 90.0, 22.0 ],
+					"text" : "reset_session"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-session-display-label",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 780.0, 260.0, 80.0, 20.0 ],
+					"text" : "session"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-session-display",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 780.0, 285.0, 120.0, 22.0 ],
+					"text" : "set stateless 0"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-prepend-set-session",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 780.0, 240.0, 65.0, 22.0 ],
+					"text" : "prepend set"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-pack-session",
+					"maxclass" : "newobj",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 780.0, 210.0, 60.0, 22.0 ],
+					"text" : "pack s i"
 				}
 
 			}
@@ -301,10 +409,10 @@
 					"id" : "obj-route",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
-					"numoutlets" : 5,
-					"outlettype" : [ "", "", "", "", "" ],
+					"numoutlets" : 6,
+					"outlettype" : [ "", "", "", "", "", "" ],
 					"patching_rect" : [ 450.0, 210.0, 160.0, 22.0 ],
-					"text" : "route status output error model"
+					"text" : "route status output error model session"
 				}
 
 			}
@@ -715,6 +823,41 @@
 				"patchline" : 				{
 					"destination" : [ "obj-model-display", 0 ],
 					"source" : [ "obj-route", 3 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-session-display", 0 ],
+					"source" : [ "obj-route", 4 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-prepend-session", 0 ],
+					"source" : [ "obj-session-menu", 1 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-node", 0 ],
+					"source" : [ "obj-prepend-session", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-msg-reset-session", 0 ],
+					"source" : [ "obj-btn-reset-session", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-node", 0 ],
+					"source" : [ "obj-msg-reset-session", 0 ]
 				}
 
 			}

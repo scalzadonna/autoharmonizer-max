@@ -16,15 +16,18 @@ from .config import (
     OSC_CONTROL_MODEL,
     OSC_CONTROL_PING,
     OSC_CONTROL_RELOAD,
+    OSC_CONTROL_SESSION,
     OSC_DEBUG_CANDIDATES,
     OSC_DEBUG_FALLBACK_USED,
     OSC_DEBUG_INPUT_ECHO,
     OSC_DEBUG_MODEL,
     OSC_DEBUG_PROBABILITY,
+    OSC_DEBUG_SESSION_HISTORY,
     OSC_ERROR,
     OSC_STATUS_MODEL,
     OSC_STATUS_PONG,
     OSC_STATUS_READY,
+    OSC_STATUS_SESSION,
     Settings,
 )
 from .csv_loader import CSVLoadError
@@ -47,6 +50,9 @@ class ChordOscService:
             seed=settings.seed,
             neural_temperature=settings.neural_temperature,
             neural_exclude_input=settings.neural_exclude_input,
+            session_mode=settings.session_mode,
+            session_max_steps=settings.session_max_steps,
+            session_auto_feed=settings.session_auto_feed,
             initial_model=settings.model,
         )
         self._client = SimpleUDPClient(settings.max_host, settings.max_port)
@@ -78,6 +84,10 @@ class ChordOscService:
     def _emit_model_status(self) -> None:
         self._send(OSC_STATUS_MODEL, self._registry.active_name)
 
+    def _emit_session_status(self) -> None:
+        mode, step = self._registry.session_status()
+        self._send(OSC_STATUS_SESSION, mode, step)
+
     def _emit_debug(self, result: SampleResult, input_chord: str) -> None:
         if not self._settings.debug:
             return
@@ -87,6 +97,9 @@ class ChordOscService:
         self._send(OSC_DEBUG_MODEL, self._registry.active_name)
         if result.probability is not None:
             self._send(OSC_DEBUG_PROBABILITY, float(result.probability))
+        history = self._registry.session_history()
+        if history:
+            self._send(OSC_DEBUG_SESSION_HISTORY, history)
 
     def _handle_chord_input(self, _address: str, *args: object) -> None:
         if not args:
@@ -107,10 +120,12 @@ class ChordOscService:
             return
 
         self._emit_debug(result, raw.strip())
+        self._emit_session_status()
         self._send(OSC_CHORD_OUTPUT, result.output)
         logger.debug(
-            "sampled model=%s %r -> %r",
+            "sampled model=%s session=%s %r -> %r",
             self._registry.active_name,
+            self._registry.session_status()[0],
             raw,
             result.output,
         )
@@ -118,6 +133,7 @@ class ChordOscService:
     def _handle_ping(self, _address: str, *_args: object) -> None:
         self._send(OSC_STATUS_PONG, 1)
         self._emit_model_status()
+        self._emit_session_status()
         logger.debug("ping -> pong")
 
     def _handle_reload(self, _address: str, *_args: object) -> None:
@@ -125,6 +141,7 @@ class ChordOscService:
             self._registry.reload_markov()
             self._send(OSC_STATUS_READY, 1)
             self._emit_model_status()
+            self._emit_session_status()
             logger.info("CSV reload succeeded")
         except (CSVLoadError, OSError) as exc:
             self._emit_error(f"reload failed: {exc}")
@@ -142,7 +159,22 @@ class ChordOscService:
             return
 
         self._emit_model_status()
+        self._emit_session_status()
         logger.info("model switched to %s via OSC", name)
+
+    def _handle_session(self, _address: str, *args: object) -> None:
+        if not args or not isinstance(args[0], str):
+            self._emit_error("malformed OSC payload: session mode must be a string")
+            return
+
+        mode = args[0].strip().lower()
+        ok, err = self._registry.set_session_mode(mode)
+        if not ok:
+            self._emit_error(err or f"failed to set session mode: {mode}")
+            return
+
+        self._emit_session_status()
+        logger.info("session control: %s", mode)
 
     def _build_dispatcher(self) -> Dispatcher:
         dispatcher = Dispatcher()
@@ -150,6 +182,7 @@ class ChordOscService:
         dispatcher.map(OSC_CONTROL_PING, self._handle_ping)
         dispatcher.map(OSC_CONTROL_RELOAD, self._handle_reload)
         dispatcher.map(OSC_CONTROL_MODEL, self._handle_model)
+        dispatcher.map(OSC_CONTROL_SESSION, self._handle_session)
         dispatcher.set_default_handler(self._handle_unknown)
         return dispatcher
 
@@ -159,7 +192,12 @@ class ChordOscService:
     def signal_ready(self) -> None:
         self._send(OSC_STATUS_READY, 1)
         self._emit_model_status()
-        logger.info("sent /status/ready model=%s", self._registry.active_name)
+        self._emit_session_status()
+        logger.info(
+            "sent /status/ready model=%s session=%s",
+            self._registry.active_name,
+            self._registry.session_status()[0],
+        )
 
     def start(self) -> None:
         self.load_engines()
@@ -169,12 +207,13 @@ class ChordOscService:
             dispatcher,
         )
         logger.info(
-            "OSC server listening on %s:%s -> Max at %s:%s model=%s",
+            "OSC server listening on %s:%s -> Max at %s:%s model=%s session_mode=%s",
             self._settings.host,
             self._settings.port,
             self._settings.max_host,
             self._settings.max_port,
             self._registry.active_name,
+            self._registry.session_mode,
         )
 
         self.signal_ready()
@@ -203,12 +242,13 @@ class ChordOscService:
         )
         self._server = server
         logger.info(
-            "OSC server listening on %s:%s -> Max at %s:%s model=%s",
+            "OSC server listening on %s:%s -> Max at %s:%s model=%s session_mode=%s",
             self._settings.host,
             self._settings.port,
             self._settings.max_host,
             self._settings.max_port,
             self._registry.active_name,
+            self._registry.session_mode,
         )
         self.signal_ready()
         if on_started:

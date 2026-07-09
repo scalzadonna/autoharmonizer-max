@@ -10,12 +10,19 @@ from pathlib import Path
 import torch
 
 from ..chord_simplifier import ChordSimplifier
-from ..config import DEFAULT_FALLBACK, DEFAULT_NEURAL_EXCLUDE_INPUT, DEFAULT_NEURAL_TEMPERATURE
+from ..config import (
+    DEFAULT_FALLBACK,
+    DEFAULT_NEURAL_EXCLUDE_INPUT,
+    DEFAULT_NEURAL_TEMPERATURE,
+    DEFAULT_SESSION_AUTO_FEED,
+    DEFAULT_SESSION_MAX_STEPS,
+)
 from .base import SampleResult
 from .jazznet_checkpoint import load_checkpoint_state
-from .jazznet_inference import predict_next_index
 from .jazznet_models import BaselineRNN
 from .jazznet_vocab import JazzNetVocab, load_vocab
+from .neural_sampler import sample_session, sample_stateless
+from .neural_session import NeuralSessionState
 
 logger = logging.getLogger(__name__)
 
@@ -32,24 +39,34 @@ class RnnEngine:
         seed: int | None = None,
         temperature: float = DEFAULT_NEURAL_TEMPERATURE,
         exclude_input: bool = DEFAULT_NEURAL_EXCLUDE_INPUT,
+        session_max_steps: int = DEFAULT_SESSION_MAX_STEPS,
+        session_auto_feed: bool = DEFAULT_SESSION_AUTO_FEED,
     ) -> None:
         self._jazznet_dir = jazznet_dir
         self._epoch = epoch
         self._fallback = fallback
         self._temperature = temperature
         self._exclude_input = exclude_input
+        self._session_max_steps = session_max_steps
+        self._session_auto_feed = session_auto_feed
         self._rng = random.Random(seed)
         self._torch_gen = torch.Generator().manual_seed(seed) if seed is not None else None
         self._simplifier = ChordSimplifier()
         self._vocab: JazzNetVocab | None = None
         self._model: BaselineRNN | None = None
         self._device = None
+        self._session = NeuralSessionState()
+
+    @property
+    def session(self) -> NeuralSessionState:
+        return self._session
+
+    def reset_session(self) -> None:
+        self._session.reset()
 
     def _ensure_loaded(self) -> None:
         if self._model is not None:
             return
-
-        import torch
 
         chords_path = self._jazznet_dir / "chords.json"
         if not chords_path.is_file():
@@ -105,7 +122,7 @@ class RnnEngine:
             return idx, simplified
         return None, None
 
-    def sample(self, raw_input: str) -> SampleResult:
+    def sample(self, raw_input: str, *, session: bool = False) -> SampleResult:
         chord = raw_input.strip()
         if not chord:
             return SampleResult(
@@ -129,41 +146,30 @@ class RnnEngine:
 
         assert self._vocab is not None and self._model is not None
 
-        idx, mapped = self._resolve_chord(chord)
+        idx, _mapped = self._resolve_chord(chord)
         if idx is None:
             return self._apply_fallback(chord)
 
-        context = [self._vocab.bos_idx, idx]
-        exclude = {idx} if self._exclude_input else None
-        try:
-            next_idx, prob = predict_next_index(
-                self._model,
-                context,
-                vocab=self._vocab,
-                rnn=True,
-                generator=self._torch_gen,
-                temperature=self._temperature,
-                exclude_indices=exclude,
-            )
-        except ValueError as exc:
-            return SampleResult(
-                output=None,
-                probability=None,
-                candidates=0,
-                fallback_used=True,
-                error=str(exc),
-            )
+        common = {
+            "model": self._model,
+            "vocab": self._vocab,
+            "chord": chord,
+            "idx": idx,
+            "rnn": True,
+            "generator": self._torch_gen,
+            "temperature": self._temperature,
+            "exclude_input": self._exclude_input,
+            "apply_fallback": self._apply_fallback,
+        }
 
-        output = self._vocab.index_chord(next_idx)
-        if output is None or output in {"pad", "<BOS>", "<EOS>"}:
-            return self._apply_fallback(chord)
-
-        return SampleResult(
-            output=output,
-            probability=prob,
-            candidates=self._vocab.vocab_size,
-            fallback_used=False,
-        )
+        if session:
+            return sample_session(
+                **common,
+                session=self._session,
+                max_steps=self._session_max_steps,
+                auto_feed_output=self._session_auto_feed,
+            )
+        return sample_stateless(**common)
 
     def _apply_fallback(self, chord: str) -> SampleResult:
         error = f"unknown chord: {chord}"

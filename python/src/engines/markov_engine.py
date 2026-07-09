@@ -23,7 +23,7 @@ class MarkovEngine:
         self._fallback = fallback
         self._rng = random.Random(seed)
 
-    def sample(self, raw_input: str) -> SampleResult:
+    def sample(self, raw_input: str, *, session: bool = False) -> SampleResult:
         chord = raw_input.strip()
 
         if not chord:
