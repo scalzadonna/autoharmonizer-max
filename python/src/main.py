@@ -1,4 +1,4 @@
-"""Entry point for the Markov chord OSC service."""
+"""Entry point for the chord generator OSC service."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import signal
 
 from .config import PROTOCOL_VERSION, load_settings
 from .csv_loader import CSVLoadError
-from .osc_service import MarkovOscService
+from .osc_service import ChordOscService
 
 
 def configure_logging(debug: bool) -> None:
@@ -22,20 +22,30 @@ def main(argv: list[str] | None = None) -> int:
     settings = load_settings(argv)
     configure_logging(settings.debug)
     logger = logging.getLogger(__name__)
-    logger.info("starting Markov chord service protocol=%s", PROTOCOL_VERSION)
+    logger.info("starting chord service protocol=%s", PROTOCOL_VERSION)
     logger.info(
-        "config csv=%s host=%s port=%s max=%s:%s fallback=%s seed=%s debug=%s",
+        "config model=%s csv=%s jazznet=%s epoch=%s host=%s port=%s max=%s:%s "
+        "fallback=%s seed=%s neural_temp=%s neural_exclude_input=%s "
+        "session_mode=%s session_max_steps=%s session_auto_feed=%s debug=%s",
+        settings.model,
         settings.csv_path,
+        settings.jazznet_dir,
+        settings.jazznet_epoch,
         settings.host,
         settings.port,
         settings.max_host,
         settings.max_port,
         settings.fallback,
         settings.seed,
+        settings.neural_temperature,
+        settings.neural_exclude_input,
+        settings.session_mode,
+        settings.session_max_steps,
+        settings.session_auto_feed,
         settings.debug,
     )
 
-    service = MarkovOscService(settings)
+    service = ChordOscService(settings)
 
     def _shutdown(_signum: int, _frame: object) -> None:
         logger.info("shutting down")

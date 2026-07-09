@@ -17,6 +17,7 @@ from src.osc_service import MarkovOscService
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CSV_PATH = REPO_ROOT / "data" / "markov_openbook.csv"
+JAZZNET_DIR = REPO_ROOT / "data" / "jazznet"
 
 
 def _free_port() -> int:
@@ -25,13 +26,12 @@ def _free_port() -> int:
         return sock.getsockname()[1]
 
 
-@pytest.fixture
-def osc_service():
-    python_port = _free_port()
-    max_port = _free_port()
-
-    settings = Settings(
+def _settings(python_port: int, max_port: int) -> Settings:
+    return Settings(
         csv_path=CSV_PATH,
+        jazznet_dir=JAZZNET_DIR,
+        jazznet_epoch=35,
+        model="markov",
         host="127.0.0.1",
         port=python_port,
         max_host="127.0.0.1",
@@ -39,7 +39,20 @@ def osc_service():
         fallback="echo_input",
         debug=False,
         seed=42,
+        neural_temperature=1.5,
+        neural_exclude_input=True,
+        session_mode="auto",
+        session_max_steps=64,
+        session_auto_feed=True,
     )
+
+
+@pytest.fixture
+def osc_service():
+    python_port = _free_port()
+    max_port = _free_port()
+
+    settings = _settings(python_port, max_port)
     service = MarkovOscService(settings)
 
     received: dict[str, list] = {"messages": []}
@@ -112,3 +125,71 @@ def test_unknown_chord_error_and_echo(osc_service):
     outputs = [args[0] for addr, args in new_messages if addr == "/chord/output"]
     assert errors
     assert outputs[-1] == "X:???"
+
+
+def test_model_switch_status(osc_service):
+    client, received = osc_service
+    before = len(received["messages"])
+    client.send_message("/control/model", ["lstm"])
+    time.sleep(2.0)
+
+    models = [args[0] for addr, args in received["messages"][before:] if addr == "/status/model"]
+    if not (JAZZNET_DIR / "checkpoints" / "lstm" / "ChordLSTM-epoch35.pt").is_file():
+        pytest.skip("JazzNet checkpoints not fetched")
+    assert models
+    assert models[-1] == "lstm"
+
+
+def test_spice_control_accepted(osc_service):
+    client, received = osc_service
+    before = len(received["messages"])
+    client.send_message("/control/spice", [0.9])
+    client.send_message("/chord/input", ["G:7"])
+    time.sleep(0.3)
+
+    new_messages = received["messages"][before:]
+    errors = [args[0] for addr, args in new_messages if addr == "/error"]
+    outputs = [args[0] for addr, args in new_messages if addr == "/chord/output"]
+    assert not any("unknown OSC address" in str(e) for e in errors)
+    assert outputs, "expected /chord/output after spice change"
+
+
+def test_session_status_on_ping(osc_service):
+    client, received = osc_service
+    before = len(received["messages"])
+    client.send_message("/control/ping", [])
+    time.sleep(0.2)
+
+    sessions = [
+        args
+        for addr, args in received["messages"][before:]
+        if addr == "/status/session"
+    ]
+    assert sessions
+    mode, step = sessions[-1]
+    assert mode == "stateless"
+    assert step == 0
+
+
+@pytest.mark.skipif(
+    not (JAZZNET_DIR / "checkpoints" / "rnn" / "baselineRNN-epoch35.pt").is_file(),
+    reason="JazzNet checkpoints not fetched",
+)
+def test_session_mode_rnn(osc_service):
+    client, received = osc_service
+    client.send_message("/control/model", ["rnn"])
+    time.sleep(2.0)
+
+    before = len(received["messages"])
+    client.send_message("/chord/input", ["G:7"])
+    time.sleep(0.5)
+
+    sessions = [
+        args
+        for addr, args in received["messages"][before:]
+        if addr == "/status/session"
+    ]
+    assert sessions
+    mode, step = sessions[-1]
+    assert mode == "session"
+    assert step == 1
