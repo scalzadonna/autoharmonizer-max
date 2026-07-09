@@ -1882,6 +1882,89 @@
 						18.0
 					]
 				}
+			},
+			{
+				"box": {
+					"id": "obj-thru-gate",
+					"maxclass": "newobj",
+					"numinlets": 2,
+					"numoutlets": 1,
+					"outlettype": [
+						""
+					],
+					"patching_rect": [
+						660.0,
+						740,
+						50.0,
+						22.0
+					],
+					"text": "gate"
+				}
+			},
+			{
+				"box": {
+					"id": "obj-thru-toggle",
+					"maxclass": "toggle",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"outlettype": [
+						"int"
+					],
+					"patching_rect": [
+						660.0,
+						710,
+						24.0,
+						24.0
+					],
+					"presentation": 1,
+					"presentation_rect": [
+						332.0,
+						286.0,
+						22.0,
+						22.0
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-load-thru",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"outlettype": [
+						""
+					],
+					"patching_rect": [
+						660.0,
+						680,
+						80.0,
+						20.0
+					],
+					"text": "loadmess 1"
+				}
+			},
+			{
+				"box": {
+					"id": "obj-thru-label",
+					"maxclass": "comment",
+					"numinlets": 1,
+					"numoutlets": 0,
+					"patching_rect": [
+						720.0,
+						710,
+						50.0,
+						18.0
+					],
+					"text": "thru",
+					"fontsize": 11.0,
+					"presentation": 1,
+					"presentation_rect": [
+						356.0,
+						287.0,
+						44.0,
+						18.0
+					]
+				}
 			}
 		],
 		"lines": [
@@ -2817,6 +2900,54 @@
 					],
 					"destination": [
 						"obj-midi-toggle",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-midiin",
+						0
+					],
+					"destination": [
+						"obj-thru-gate",
+						1
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-thru-toggle",
+						0
+					],
+					"destination": [
+						"obj-thru-gate",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-thru-gate",
+						0
+					],
+					"destination": [
+						"obj-midiout",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-load-thru",
+						0
+					],
+					"destination": [
+						"obj-thru-toggle",
 						0
 					]
 				}

@@ -76,7 +76,8 @@ Ports are set in `markov_osc.js`. Change them there if you use non-default Pytho
 | **Spice** (live.dial) | Sends `/control/spice` (`0`–`1`, `0.5` neutral). Live sampling adventurousness for Markov **and** neural: higher = rarer/surprising chords, lower = safe/common. Macro-mappable. |
 | **vel** / **dur** (number) | `makenote` velocity (default 90) and note length in ms (default 1000) for the emitted MIDI. |
 | **panic** | All notes off (flushes any held notes). |
-| **seed from MIDI in** (toggle, default **on**) | When on, a note played into the track seeds the chain (its pitch class → a major-triad root); the generated chord is what sounds. |
+| **seed from MIDI in** (toggle, default **on**) | When on, a note played into the track seeds the chain (its pitch class → a major-triad root); the generated chord sounds. |
+| **thru** (toggle, default **on**) | Parallel `midiin → midiout` passthrough — your played notes also reach the instrument, so you hear the dry note **plus** the generated harmony. Turn off for replace-mode (generated triad only). |
 | status | Shows `ready` or `waiting` |
 | active model | Last `/status/model` from Python |
 | session | Last `/status/session` (mode + step) |
@@ -102,8 +103,10 @@ new one so notes don't pile up.
 
 Trigger a chord by clicking **send** (or the chord menu), by turning **Rhythm**
 up (hands-free auto-advance), or by **playing a note** into the track (seeds the
-chain — see the toggle above). As a Max MIDI Effect the device does **not** pass
-your played notes through — the generated triad replaces them.
+chain — see the toggle above). The **thru** toggle (default **on**) adds a
+parallel `midiin → midiout` passthrough, so played notes sound **alongside** the
+generated harmony; turn it off to have the generated triad **replace** your notes
+(pure-generator mode).
 
 > Node → Max messages driving this: `notes <midi…>` (play), `stop` (silence).
 > These are internal patch messages, not part of the OSC contract with Python.
