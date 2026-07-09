@@ -76,9 +76,14 @@ const TEMPLATES = {
   6: { name: "qtr_half_qtr", spanBars: 1, onsets: [0, 1, 3] },
   7: { name: "static_2bar", spanBars: 2, onsets: [0] },
 };
+// Templates ordered SPARSE -> DENSE for the performable "rhythm" dial: a
+// live.dial 0..1 sweeps harmonic-rhythm density from one chord every two bars
+// up to a chord on every beat.
+const RHYTHM_ORDER = [7, 1, 2, 4, 6, 5, 3];
 const player = {
   active: false,
-  templateId: 3, // four_quarters
+  templateId: 2, // half_half (matches the rhythm dial's default)
+  pendingTemplateId: null, // queued rhythm change, applied on the next bar
   lengthBars: 4,
   beat: -1, // first metro tick advances to 0
   pending: null, // next Markov chord to sonify on the beat
@@ -368,6 +373,12 @@ function playerBeat() {
     playerStop("done");
     return;
   }
+  // Apply a queued rhythm change on the bar downbeat so sweeping the dial
+  // lands musically rather than mid-bar.
+  if (b % 4 === 0 && player.pendingTemplateId != null) {
+    player.templateId = player.pendingTemplateId;
+    player.pendingTemplateId = null;
+  }
   if (!isSlotOnset(player.templateId, b % templateCycleBeats(player.templateId))) return;
   const chord = player.pending || player.seed;
   sonifyChord(chord, "player"); // play the current chord (as a triad)
@@ -384,13 +395,32 @@ Max.addHandler("beat", () => {
   playerBeat();
 });
 
-/** Choose the harmonic-rhythm template (1..7). */
+/** Choose the harmonic-rhythm template directly (1..7). */
 Max.addHandler("template", (value) => {
   const id = Math.round(Number(value));
   if (TEMPLATES[id]) {
     player.templateId = id;
+    player.pendingTemplateId = null;
     Max.post(`player: template ${id} (${TEMPLATES[id].name})`);
   }
+});
+
+/**
+ * Performable rhythm dial (0..1): sweeps harmonic-rhythm density from sparse
+ * (one chord every two bars) to dense (a chord on every beat). The change is
+ * queued and applied on the next bar downbeat while playing (musical), or
+ * immediately when stopped. Emits the template name for on-screen feedback.
+ */
+function rhythmToTemplate(v) {
+  const x = Math.max(0, Math.min(1, Number(v) || 0));
+  const idx = Math.round(x * (RHYTHM_ORDER.length - 1));
+  return RHYTHM_ORDER[idx];
+}
+Max.addHandler("rhythm", (value) => {
+  const id = rhythmToTemplate(value);
+  player.pendingTemplateId = id;
+  if (!player.active) player.templateId = id; // apply now when stopped
+  Max.outlet(["rhythmname", TEMPLATES[id].name]);
 });
 
 /** Set the predetermined length in bars. */

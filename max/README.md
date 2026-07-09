@@ -143,19 +143,20 @@ you press **PLAY**, with **no need to start Live's transport**. Chords change at
 the template's slot onsets and sustain until the next; after the set number of
 bars it stops and flushes all notes.
 
-**Presentation controls:** `seed` chord + **send**, **PLAY** toggle, a **rhythm**
-dropdown (the 7 templates below), **tempo (BPM)** (default 120), **length**
+**Presentation controls:** `seed` chord + **send**, **PLAY** toggle, a
+performable **Rhythm** `live.dial`, **tempo (BPM)** (default 120), **length**
 (bars, default 4), three **colour** `live.dial`s, a **sync** toggle, plus
 `chord` / `notes` / `status` displays.
 
-**Performable colour knobs** (`live.dial`s — registered parameters, so you can
-map them to rack **macros**): each is a per-chord probability 0–100 %.
+**Performable dials** (`live.dial`s — registered parameters, so you can map them
+to rack **macros**):
 
 | Dial | Effect |
 |---|---|
-| **Major** | chance of forcing the chord to a **major** triad |
-| **Minor** | chance of forcing it to a **minor** triad (Major wins ties) |
-| **7th** | chance of adding a **flat-7th** (major→dom7, minor→min7) |
+| **Rhythm** | 0–100 % sweeps harmonic-rhythm **density** through the templates below, sparse→dense (one chord / two bars → a chord every beat). Changes land on the next bar downbeat while playing; the current template name shows next to the dial. Default ≈ `half_half`. |
+| **Major** | per-chord chance of forcing a **major** triad |
+| **Minor** | per-chord chance of forcing a **minor** triad (Major wins ties) |
+| **7th** | per-chord chance of adding a **flat-7th** (major→dom7, minor→min7) |
 
 All three at 0 = the natural major/minor triad. The colour is applied to the
 Markov-returned chord in Node (`colormajor` / `colorminor` / `color7th`
@@ -178,16 +179,17 @@ that follows Live's tempo and plays only while the transport is running).
 | 7 | static_2bar | 2 bars | 0 |
 
 **Use:** start Python; add the device to a MIDI track with an instrument after
-it; type a seed chord + **send**; pick a **rhythm**, **tempo**, and **length**;
-press **PLAY** (Live's transport does not need to be running). The **rhythm**
-dropdown is populated on load and defaults to `four_quarters`.
+it; type a seed chord + **send**; set the **Rhythm** dial, **tempo**, and
+**length**; press **PLAY** (Live's transport does not need to be running).
+Sweep the **Rhythm** and **colour** dials while it plays — or map them to
+macros — to perform the harmony.
 
 > Python must be running for the chain to advance. Without it, PLAY still runs
 > the clock but the seed chord simply repeats at the chosen rhythm.
 
-Node messages: `play 1|0`, `beat` (quarter-note clock), `template <1-7>`,
-`length <bars>`, `seed <chord>` in; `playoff` out (stops the clock when the
-length completes).
+Node messages in: `play 1|0`, `beat` (quarter-note clock), `rhythm <0-1>`,
+`template <1-7>`, `length <bars>`, `seed <chord>`, `colormajor/colorminor/color7th <0-1>`.
+Node messages out: `playoff` (clock done), `rhythmname <name>` (current template).
 
 ## MIDI input from Ableton
 
