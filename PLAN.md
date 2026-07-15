@@ -49,8 +49,8 @@ The implementation should favor simple local operation on one machine first, usi
 
 ### Components
 
-1. **Max patch (`max/chord_generator_device.maxpat`)**
-   - Standalone Max/MSP patch (not Max for Live in v1).
+1. **Max devices (`max/chord_generator_device.maxpat`, `max/chord_sequencer_device.maxpat`)**
+   - Two Max for Live MIDI-Effect devices sharing one Node bridge (`markov_osc.js`): the **generator** (one chord in → one chord out) and the **sequencer** (auto-plays the chain with a performable harmonic-rhythm density sweep + colour dials). Supersedes v1's single standalone-`.maxpat` framing.
    - Receives or captures an input chord.
    - Sends OSC to Python.
    - Receives OSC reply from Python.
@@ -133,6 +133,8 @@ Python -> Max:   /debug/fallback_used i  0
 | Python -> Max | `/debug/candidates` | `int` | Number of available next states. |
 | Python -> Max | `/debug/input_echo` | `string` | Echo received chord for traceability. |
 | Python -> Max | `/debug/fallback_used` | `int` | `1` if fallback logic was triggered, else `0`. |
+| Python -> Max | `/debug/model` | `string` | Active model name at sample time. |
+| Python -> Max | `/debug/session_history` | `string` | Comma-separated token trace (session mode). |
 
 Debug messages are emitted only when Python debug mode is enabled (default off).
 
@@ -142,7 +144,7 @@ Debug messages are emitted only when Python debug mode is enabled (default off).
 - OSC addresses are stable and must not be renamed without updating both sides.
 - Error messages should be human-readable.
 - Debug messages must not be required for core operation.
-- Protocol version `v1` is recorded in Python constants and Max patch comments.
+- Protocol version `v3` is recorded in Python constants and Max patch comments (this document's earlier `v1` framing is historical; the shipped devices are Max for Live and add model/session/spice control).
 - Duplicate sends from Max are acceptable; Python treats each `/chord/input` independently.
 - If Max does not receive `/chord/output` within 500 ms, it shows a timeout error and allows the user to retry.
 

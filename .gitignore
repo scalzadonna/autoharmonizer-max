@@ -3,3 +3,4 @@ data/jazznet/checkpoints/**/*.pt
 __pycache__/
 *.pyc
 .pytest_cache/
+ralph/logs/

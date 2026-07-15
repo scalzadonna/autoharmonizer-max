@@ -140,13 +140,59 @@ node build_amxd.js   # wraps chord_generator_device.maxpat -> Chord Generator De
 > Ableton caches an `.amxd` when you add it and does not reload after a rebuild
 > — **delete the device from the track and drag the fresh one back in**.
 
+## Chord Sequencer device
+
+`chord_sequencer_device.maxpat` / `Chord Sequencer Device.amxd` is a second
+device that **auto-plays** the Markov chain in time. It loads the **same**
+`markov_osc.js` bridge (and `chord_parser.js`) as the generator, so it inherits
+the identical voicing and MIDI output — it just decides **when** chords land.
+
+- **Rhythm** (live.dial, macro-mappable): a *performable harmonic-rhythm density
+  sweep*. It sweeps seven templates from **sparse → dense** — `static_2bar`
+  (one chord every two bars) → `whole_bar` → `half_half` → … → `four_quarters`
+  (a chord on every beat). While playing, a change **queues and applies on the
+  next bar downbeat** so sweeps land musically; while stopped it applies at once.
+  The active template name shows in the rhythm readout.
+- **Major / Minor / Seventh** (live.dials, macro-mappable): colour knobs (`0–1`)
+  biasing each voicing toward a major 3rd, minor 3rd, or added flat-7th (all `0`
+  = natural triad).
+- **play / BPM / bars / sync transport**: an in-patch clock drives the chain — it
+  runs free at the **BPM** box, or flip **sync transport** to follow Live's
+  transport (`metro 4n`). **bars** sets the phrase length.
+- **seed / send**: the chord the chain (re)starts from. Each onset plays the held
+  chord and fetches its Markov successor (an output→input walk), so the sequence
+  evolves hands-free.
+
+Mechanically, the sequencer sends `play`, a per-quarter `beat` tick, and `rhythm`
+/ `length` / colour messages into `markov_osc.js`; the bridge **holds** each
+Python reply and sonifies it on the next template onset (the generator, by
+contrast, sonifies immediately). The two paths are gated internally by the
+sequencer's transport (`player.active`), so the generator is byte-for-byte
+unaffected. The seven templates are defined inline in `markov_osc.js`;
+`data/harmonic_templates.csv` mirrors them as reference data (nothing loads it at
+runtime).
+
+> **One driver per Python instance.** Both devices bind the same Max OSC port
+> (`9001`) and talk to the same Python port (`9000`), so run **one at a time**
+> against a given Python service. Two open at once collide on the reply socket
+> (the second logs an OSC bind error and receives no chords).
+
+Regenerate after editing the patch:
+
+```bash
+cd max
+node build_amxd.js chord_sequencer_device.maxpat "Chord Sequencer Device.amxd" mmmm
+```
+
 ## Files in this folder
 
 | File | Purpose |
 |---|---|
 | `chord_generator_device.maxpat` | Max UI (Presentation panel) with model/session switcher, Rhythm/Spice dials + Node bridge |
 | `Chord Generator Device.amxd` | Max for Live MIDI-Effect device (wraps the patch; Rhythm/Spice exposed as parameters) |
-| `markov_osc.js` | Node-for-Max OSC client/server (v3) + chord voicing / MIDI-note emission |
+| `chord_sequencer_device.maxpat` | Auto-play sequencer UI: performable Rhythm density sweep + Major/Minor/Seventh colour dials + transport |
+| `Chord Sequencer Device.amxd` | Max for Live MIDI-Effect device wrapping the sequencer patch (Rhythm/Major/Minor/Seventh exposed as parameters) |
+| `markov_osc.js` | Node-for-Max OSC client/server (v3) + chord voicing / MIDI-note emission; **shared** by both devices — adds the sequencer clock/templates (gated so the generator is unaffected) |
 | `chord_parser.js` | Pure-JS chord-symbol parser + triad voicing engine (used by `markov_osc.js`) |
 | `build_amxd.js` | Wraps the `.maxpat` into the `.amxd` device (arg 3 = device type) |
 | `package.json` | npm dependency on `node-osc` |
