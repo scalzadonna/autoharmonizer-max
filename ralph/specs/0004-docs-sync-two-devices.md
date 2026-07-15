@@ -1,6 +1,6 @@
 # Spec 0004 — Sync docs to the two-device reality
 
-Status: TODO
+Status: COMPLETE
 Priority: 4
 Depends on: 0001 (the sequencer device must exist to be documented).
 
@@ -34,19 +34,19 @@ the second device + the internal (non-OSC) Max message vocabulary.
   parity, and record how to run it.
 
 ## Acceptance Criteria
-- [ ] `docs/osc_contract.md` references the sequencer and states it uses the same
+- [x] `docs/osc_contract.md` references the sequencer and states it uses the same
       v3 OSC with **no new addresses**.
-- [ ] **No OSC drift:** the set of OSC addresses listed in `docs/osc_contract.md`
+- [x] **No OSC drift:** the set of OSC addresses listed in `docs/osc_contract.md`
       equals the set the Python service dispatches (cross-checked against
       `python/src/config.py` + `python/src/osc_service.py`). Show the check and its
       passing output. Reconcile any mismatch found (fix whichever side is wrong).
-- [ ] The internal (non-OSC) Max message vocabulary is documented and explicitly
+- [x] The internal (non-OSC) Max message vocabulary is documented and explicitly
       labelled as outside the OSC contract.
-- [ ] `PLAN.md` names `chord_sequencer_device` / the two-device layout.
-- [ ] Sanity unchanged: `cd max && npm test` exits 0 and
+- [x] `PLAN.md` names `chord_sequencer_device` / the two-device layout.
+- [x] Sanity unchanged: `cd max && npm test` exits 0 and
       `cd python && /opt/anaconda3/bin/python3 -m pytest -q` passes (docs-only
       change must not break anything).
-- [ ] Committed on `ralph/build`; branch pushed.
+- [x] Committed on `ralph/build`; branch pushed.
 
 ## Not in scope
 - No behavior/protocol changes — this spec is docs + a consistency check only. If
