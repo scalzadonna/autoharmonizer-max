@@ -2146,6 +2146,107 @@
 						18
 					]
 				}
+			},
+			{
+				"box": {
+					"id": "obj-thru-midiin",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"outlettype": [
+						"int"
+					],
+					"patching_rect": [
+						760.0,
+						540.0,
+						50.0,
+						22.0
+					],
+					"text": "midiin"
+				}
+			},
+			{
+				"box": {
+					"id": "obj-thru-load",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"outlettype": [
+						""
+					],
+					"patching_rect": [
+						860.0,
+						540.0,
+						80.0,
+						20.0
+					],
+					"text": "loadmess 1"
+				}
+			},
+			{
+				"box": {
+					"id": "obj-thru-toggle",
+					"maxclass": "toggle",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"outlettype": [
+						"int"
+					],
+					"patching_rect": [
+						860.0,
+						575.0,
+						24.0,
+						24.0
+					],
+					"presentation": 1,
+					"presentation_rect": [
+						360.0,
+						86.0,
+						22.0,
+						22.0
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-thru-gate",
+					"maxclass": "newobj",
+					"numinlets": 2,
+					"numoutlets": 1,
+					"outlettype": [
+						""
+					],
+					"patching_rect": [
+						760.0,
+						610.0,
+						50.0,
+						22.0
+					],
+					"text": "gate"
+				}
+			},
+			{
+				"box": {
+					"id": "obj-thru-label",
+					"maxclass": "comment",
+					"numinlets": 1,
+					"numoutlets": 0,
+					"patching_rect": [
+						890.0,
+						578.0,
+						50.0,
+						18.0
+					],
+					"text": "thru",
+					"fontsize": 11.0,
+					"presentation": 1,
+					"presentation_rect": [
+						356.0,
+						68.0,
+						44.0,
+						16.0
+					]
+				}
 			}
 		],
 		"lines": [
@@ -3225,6 +3326,54 @@
 					],
 					"source": [
 						"obj-seq-playoff-toggle",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-thru-gate",
+						1
+					],
+					"source": [
+						"obj-thru-midiin",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-thru-gate",
+						0
+					],
+					"source": [
+						"obj-thru-toggle",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-midiout",
+						0
+					],
+					"source": [
+						"obj-thru-gate",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"destination": [
+						"obj-thru-toggle",
+						0
+					],
+					"source": [
+						"obj-thru-load",
 						0
 					]
 				}

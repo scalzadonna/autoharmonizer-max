@@ -1,6 +1,6 @@
 # Spec 0003 — Gated MIDI thru on the sequencer (generator parity)
 
-Status: TODO
+Status: COMPLETE
 Priority: 3
 Depends on: 0001 (sequencer maxpat on `ralph/build`); do 0002 first so the engine
 is regression-guarded before touching the device.
@@ -34,19 +34,19 @@ a `thru` toggle feeding the gate's control inlet, defaulted on via `loadmess 1`.
 ## Acceptance Criteria
 (Verify structurally by parsing the maxpat JSON — e.g. a short `node`/`python`
 script that loads `max/chord_sequencer_device.maxpat` and checks the boxes/lines.)
-- [ ] The patch contains at least one `midiin` and one `midiout`, with patchlines
+- [x] The patch contains at least one `midiin` and one `midiout`, with patchlines
       `midiin -> gate` and `gate -> midiout` (the thru chain).
-- [ ] A `toggle` feeds the gate's control inlet (inlet 0) and is defaulted ON via
+- [x] A `toggle` feeds the gate's control inlet (inlet 0) and is defaulted ON via
       a `loadmess 1` (or `live.toggle` with init 1); the toggle is in Presentation
       with a visible "thru" label.
-- [ ] `git diff max-markov -- max/markov_osc.js` shows NO change from this spec
+- [x] `git diff max-markov -- max/markov_osc.js` shows NO change from this spec
       beyond what 0001/0002 committed (thru is patch-only).
-- [ ] Generator patch untouched: `git diff max-markov -- max/chord_generator_device.maxpat`
+- [x] Generator patch untouched: `git diff max-markov -- max/chord_generator_device.maxpat`
       is empty.
-- [ ] `node build_amxd.js chord_sequencer_device.maxpat "Chord Sequencer Device.amxd" mmmm`
+- [x] `node build_amxd.js chord_sequencer_device.maxpat "Chord Sequencer Device.amxd" mmmm`
       succeeds and still reports `params: Rhythm, Major, Minor, Seventh`.
-- [ ] `cd max && npm test` still exits 0 (no regression).
-- [ ] Committed on `ralph/build`; branch pushed.
+- [x] `cd max && npm test` still exits 0 (no regression).
+- [x] Committed on `ralph/build`; branch pushed.
 
 ## Not in scope / human-only
 - Confirming you actually HEAR the dry played note alongside the sequence in
