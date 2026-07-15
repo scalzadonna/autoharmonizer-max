@@ -1,6 +1,6 @@
 # Spec 0002 — Committed unit tests for the sequencer engine
 
-Status: TODO
+Status: COMPLETE
 Priority: 2
 Depends on: 0001 (needs the unified `markov_osc.js` on `ralph/build`).
 
@@ -44,11 +44,11 @@ driving them. `chord_parser.js` runs for real (pure JS).
   `"test": "node chord_parser.test.js && node markov_osc.test.js"`.
 
 ## Acceptance Criteria
-- [ ] `max/markov_osc.test.js` exists, self-contained (stubs `max-api`+`node-osc`,
+- [x] `max/markov_osc.test.js` exists, self-contained (stubs `max-api`+`node-osc`,
       no external test framework), exits non-zero on failure.
-- [ ] `node --check max/markov_osc.test.js` passes.
-- [ ] `cd max && npm test` runs BOTH suites and exits 0; report the counts.
-- [ ] The engine test covers all six behaviors listed above.
-- [ ] Committed on `ralph/build`; branch pushed.
+- [x] `node --check max/markov_osc.test.js` passes.
+- [x] `cd max && npm test` runs BOTH suites and exits 0; report the counts.
+- [x] The engine test covers all six behaviors listed above.
+- [x] Committed on `ralph/build`; branch pushed.
 
 Print `<promise>DONE</promise>` only when every checkbox is verified.
