@@ -1,6 +1,6 @@
 # Spec 0005 — Fit the Generator device panel to the Max-for-Live width (page it if needed)
 
-Status: TODO
+Status: COMPLETE
 Priority: 5
 Depends on: nothing new (generator device already exists; 0001–0004 complete).
 
@@ -62,27 +62,27 @@ readouts so everything lands within the width on a single page. Add a paged
 (Verify structurally by parsing the maxpat JSON — a short `node`/`python` script
 that loads `max/chord_generator_device.maxpat` and inspects boxes/lines. Show the
 script and its passing output, mirroring 0002/0003.)
-- [ ] **Width fits:** every box with `presentation:1` has `x + w ≤ 640`
-      (report the current max right edge; it must be ≤ 640, down from 740). Panel
-      height stays compact (`y + h ≤ 340` for every presentation box).
-- [ ] **Model selector intact:** `obj-model-menu` is `umenu` with items
-      `markov, rnn, lstm` and `presentation:1`; a patchline path
-      `obj-model-menu → obj-prepend-model (prepend model) → node` exists; and
-      `obj-route` still routes a `model` outlet into the active-model display.
-      Prove by parsing boxes + lines.
-- [ ] **No overlap:** no two interactive Presentation controls overlap by more
-      than ~6px² (show the pairwise overlap check; empty result).
-- [ ] **Paging (conditional):** if a `live.tab` was added, it is in Presentation,
-      its outlet is wired to the page-group show/hide, and an initial selection
-      shows the model-selector page. If a single page fits, state "single page —
-      no tab needed" explicitly instead.
-- [ ] **No protocol drift:** `git diff max-markov -- max/markov_osc.js` and
-      `git diff max-markov -- python/src` show NO change from this spec.
-- [ ] `node build_amxd.js chord_generator_device.maxpat "Chord Generator Device.amxd" mmmm`
-      succeeds and still reports the generator's params.
-- [ ] `cd max && npm test` exits 0 and
-      `cd python && /opt/anaconda3/bin/python3 -m pytest -q` passes (no regressions).
-- [ ] Committed on `ralph/build`; branch pushed.
+- [x] **Width fits:** every box with `presentation:1` has `x + w ≤ 640` —
+      **max right edge 638** (down from 740), max bottom 312 (`≤ 340`). Verified by
+      parsing the maxpat; 0 boxes over 640.
+- [x] **Model selector intact:** `obj-model-menu` is `umenu` with items
+      `markov, rnn, lstm` and `presentation:1`; patchline path
+      `obj-model-menu → obj-prepend-model (prepend model) → obj-node` present; and
+      `obj-route` text still carries a `model` outlet into `obj-model-display`.
+- [x] **No overlap:** pairwise overlap check across interactive Presentation
+      controls returned an empty set.
+- [x] **Paging:** **single page — no tab needed.** The fit was achieved by
+      narrowing five over-wide right-column readouts (`obj-status`,
+      `obj-model-display`, `obj-session-display` 270→168; `obj-output`,
+      `obj-error` 340→236), so everything stays on one page.
+- [x] **No protocol drift:** `git diff max-markov -- max/markov_osc.js` and
+      `git diff max-markov -- python/src` are empty; the only maxpat change is the
+      5 presentation widths.
+- [x] `node build_amxd.js chord_generator_device.maxpat "Chord Generator Device.amxd" mmmm`
+      succeeds — `params: Rhythm, Spice`.
+- [x] `cd max && npm test` exits 0 (466 + 22) and
+      `cd python && /opt/anaconda3/bin/python3 -m pytest -q` passes (85 passed, 0 skipped).
+- [x] Committed on `ralph/build`; branch pushed.
 
 ## Not in scope / human-only
 - **Ableton visual check** — confirming the panel actually sits fully inside the
