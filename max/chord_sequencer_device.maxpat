@@ -400,15 +400,16 @@
 					"id": "obj-route",
 					"maxclass": "newobj",
 					"numinlets": 1,
-					"numoutlets": 9,
+					"numoutlets": 10,
 					"patching_rect": [
 						250,
 						245,
 						330,
 						22
 					],
-					"text": "route status output error chord notes stop playoff rhythmname",
+					"text": "route status output error chord notes stop playoff rhythmname model",
 					"outlettype": [
+						"",
 						"",
 						"",
 						"",
@@ -2247,6 +2248,127 @@
 						16.0
 					]
 				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-model-label",
+					"maxclass": "comment",
+					"numinlets": 1,
+					"numoutlets": 0,
+					"patching_rect": [
+						700.0,
+						40.0,
+						90.0,
+						20.0
+					],
+					"text": "model",
+					"presentation": 1,
+					"presentation_rect": [
+						400.0,
+						40.0,
+						90.0,
+						18.0
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-model-menu",
+					"maxclass": "umenu",
+					"numinlets": 1,
+					"numoutlets": 3,
+					"outlettype": [
+						"int",
+						"",
+						""
+					],
+					"parameter_enable": 0,
+					"patching_rect": [
+						700.0,
+						66.0,
+						120.0,
+						22.0
+					],
+					"items": [
+						"markov",
+						",",
+						"rnn",
+						",",
+						"lstm"
+					],
+					"presentation": 1,
+					"presentation_rect": [
+						400.0,
+						60.0,
+						96.0,
+						22.0
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-prepend-model",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"outlettype": [
+						""
+					],
+					"patching_rect": [
+						700.0,
+						96.0,
+						95.0,
+						22.0
+					],
+					"text": "prepend model"
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-model-disp-label",
+					"maxclass": "comment",
+					"numinlets": 1,
+					"numoutlets": 0,
+					"patching_rect": [
+						830.0,
+						40.0,
+						90.0,
+						20.0
+					],
+					"text": "active model",
+					"presentation": 1,
+					"presentation_rect": [
+						400.0,
+						88.0,
+						96.0,
+						16.0
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-model-disp",
+					"maxclass": "message",
+					"numinlets": 2,
+					"numoutlets": 1,
+					"outlettype": [
+						""
+					],
+					"patching_rect": [
+						830.0,
+						66.0,
+						120.0,
+						22.0
+					],
+					"text": "set markov",
+					"presentation": 1,
+					"presentation_rect": [
+						400.0,
+						106.0,
+						96.0,
+						20.0
+					]
+				}
 			}
 		],
 		"lines": [
@@ -3374,6 +3496,42 @@
 					],
 					"source": [
 						"obj-thru-load",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-seq-model-menu",
+						1
+					],
+					"destination": [
+						"obj-seq-prepend-model",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-seq-prepend-model",
+						0
+					],
+					"destination": [
+						"obj-node",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-route",
+						8
+					],
+					"destination": [
+						"obj-seq-model-disp",
 						0
 					]
 				}
