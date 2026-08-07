@@ -1,6 +1,6 @@
 # Spec 0006 — Add a model selector to the Sequencer device (generator parity)
 
-Status: TODO
+Status: COMPLETE
 Priority: 6
 Depends on: nothing new. Mirrors the generator's model selector (shipped) and the
 fitted-panel discipline from 0005.
@@ -68,24 +68,23 @@ Current sequencer wiring facts:
 (Verify structurally by parsing the maxpat JSON — a short `node`/`python` script
 that loads `max/chord_sequencer_device.maxpat` and checks boxes/lines, as in
 0003/0005. Show the script and its passing output.)
-- [ ] **Selector present:** a `umenu` with items `markov, rnn, lstm` and
-      `presentation:1` exists in the sequencer patch.
-- [ ] **Wired to the bridge:** patchline path
-      `<model-menu> → <prepend model> → obj-node` exists, and the prepend object's
-      text is exactly `prepend model`.
-- [ ] **Confirmation readout:** `obj-route` text now contains a `model` token, its
-      `numoutlets` equals the match-arg count + 1, and a patchline connects the
-      `model` outlet to a `message` readout that is `presentation:1`.
-- [ ] **Fits + no overlap:** every `presentation:1` box has `x + w ≤ 640` (report
-      the max right edge); no two interactive Presentation controls overlap (>6px²).
-- [ ] **No collateral change:** `git diff max-markov -- max/markov_osc.js`,
-      `git diff max-markov -- max/chord_generator_device.maxpat`, and
-      `git diff max-markov -- python/src` are all empty.
-- [ ] `node build_amxd.js chord_sequencer_device.maxpat "Chord Sequencer Device.amxd" mmmm`
-      succeeds and still reports the sequencer's params.
-- [ ] `cd max && npm test` exits 0 and
-      `cd python && /opt/anaconda3/bin/python3 -m pytest -q` passes (no regressions).
-- [ ] Committed on `ralph/build`; branch pushed.
+- [x] **Selector present:** `obj-seq-model-menu` is a `umenu` with items
+      `markov, rnn, lstm` and `presentation:1`.
+- [x] **Wired to the bridge:** `obj-seq-model-menu[1] → obj-seq-prepend-model
+      (prepend model) → obj-node[0]` (mirrors the generator's middle-outlet path).
+- [x] **Confirmation readout:** `obj-route` text is `…rhythmname model`;
+      `numoutlets` = 10 = 9 matches + 1; the new `model` outlet (index 8) wires to
+      `obj-seq-model-disp`, a `message` with `presentation:1`.
+- [x] **Fits + no overlap:** max right edge **496** (`≤ 640`, placed in the free
+      right column); pairwise interactive-overlap check returned empty.
+- [x] **No collateral change:** `git diff` for `max/markov_osc.js`,
+      `max/chord_generator_device.maxpat`, and `python/src` are all empty; only
+      `max/chord_sequencer_device.maxpat` (+ its rebuilt `.amxd`) changed.
+- [x] `node build_amxd.js chord_sequencer_device.maxpat "Chord Sequencer Device.amxd" mmmm`
+      succeeds — `params: Rhythm, Major, Minor, Seventh` (117 boxes, 97 lines).
+- [x] `cd max && npm test` exits 0 (466 + 22) and
+      `cd python && /opt/anaconda3/bin/python3 -m pytest -q` passes (85 passed, 0 skipped).
+- [x] Committed on `ralph/build`; branch pushed.
 
 ## Not in scope / human-only
 - **Ableton check** — actually switching model from the sequencer panel and
