@@ -1,6 +1,6 @@
 # Spec 0007 — Surface session + temperature (Spice) controls on the Sequencer device
 
-Status: TODO
+Status: COMPLETE
 Priority: 7
 Depends on: 0006 (the sequencer's `obj-route` gained a `model` outlet; this spec
 appends a `session` outlet after it). Mirrors the Generator, which already ships
@@ -71,25 +71,28 @@ exists on the wire, so this is a **Max-patch-only** change.
 ## Acceptance Criteria
 (Verify structurally by parsing `max/chord_sequencer_device.maxpat` — a short
 `node`/`python` script that checks boxes/lines, as in 0005/0006. Show it + output.)
-- [ ] **Session menu:** a `umenu` with items `auto, stateless, session` and
-      `presentation:1`; path `<menu>[1] → <prepend session> → obj-node`.
-- [ ] **Reset:** a `textbutton` (Presentation) → a `message` whose text is exactly
-      `reset_session` → `obj-node`.
-- [ ] **Session readout:** `obj-route` text contains `session`; `numoutlets` =
-      match-arg count + 1; the `session` outlet wires to a `presentation:1`
-      `message` readout.
-- [ ] **Spice/temperature dial:** a `live.dial` (`parameter_enable 1`,
-      `presentation:1`) → `<prepend spice> → obj-node`, with a visible label.
-- [ ] **Fits + no overlap:** every `presentation:1` box has `x + w ≤ 640` (report
-      the max right edge); no interactive-control overlap (>6px²).
-- [ ] **No collateral change:** `git diff max-markov` for `max/markov_osc.js`,
-      `max/chord_generator_device.maxpat`, and `python/src` are all empty; only the
-      sequencer maxpat (+ rebuilt `.amxd`) changed.
-- [ ] `node build_amxd.js chord_sequencer_device.maxpat "Chord Sequencer Device.amxd" mmmm`
-      succeeds and still reports the sequencer's params.
-- [ ] `cd max && npm test` exits 0 and
-      `cd python && /opt/anaconda3/bin/python3 -m pytest -q` passes (no regressions).
-- [ ] Committed on `ralph/build`; branch pushed.
+- [x] **Session menu:** `obj-seq-session-menu` is a `umenu` `auto, stateless,
+      session` with `presentation:1`; `menu[1] → obj-seq-prepend-session
+      (prepend session) → obj-node`.
+- [x] **Reset:** `obj-seq-btn-reset-session` (`textbutton`, Presentation) →
+      `obj-seq-msg-reset-session` (`message "reset_session"`) → `obj-node`.
+- [x] **Session readout:** `obj-route` text ends `…model session`; `numoutlets`
+      = 11 = 10 matches + 1; the `session` outlet (index 9) wires to
+      `obj-seq-session-disp`, a `presentation:1` `message`.
+- [x] **Spice/temperature dial:** `obj-seq-dial-spice` is a `live.dial`
+      (`parameter_enable 1`, `presentation:1`, param `Spice`, init 0.5) →
+      `obj-seq-prepend-spice (prepend spice) → obj-node`, labelled
+      "SPICE · temperature".
+- [x] **Fits + no overlap:** max right edge **630** (`≤ 640`), bottom 234; pairwise
+      interactive-overlap check empty. Controls sit in a new right column x≈510–630.
+- [x] **No collateral change:** `git diff` for `max/markov_osc.js`,
+      `max/chord_generator_device.maxpat`, and `python/src` are all empty; only
+      `max/chord_sequencer_device.maxpat` (+ rebuilt `.amxd`) changed.
+- [x] `node build_amxd.js …` succeeds — `params: Rhythm, Major, Minor, Seventh,
+      Spice` (127 boxes, 104 lines).
+- [x] `cd max && npm test` exits 0 (466 + 22) and
+      `cd python && /opt/anaconda3/bin/python3 -m pytest -q` passes (85 passed, 0 skipped).
+- [x] Committed on `ralph/build`; branch pushed.
 
 ## Not in scope / human-only
 - **A separate live neural-temperature OSC** decoupled from Spice — Spice already

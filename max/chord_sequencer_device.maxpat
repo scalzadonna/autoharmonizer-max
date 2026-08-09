@@ -400,15 +400,16 @@
 					"id": "obj-route",
 					"maxclass": "newobj",
 					"numinlets": 1,
-					"numoutlets": 10,
+					"numoutlets": 11,
 					"patching_rect": [
 						250,
 						245,
 						330,
 						22
 					],
-					"text": "route status output error chord notes stop playoff rhythmname model",
+					"text": "route status output error chord notes stop playoff rhythmname model session",
 					"outlettype": [
+						"",
 						"",
 						"",
 						"",
@@ -2369,6 +2370,255 @@
 						20.0
 					]
 				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-session-label",
+					"maxclass": "comment",
+					"numinlets": 1,
+					"numoutlets": 0,
+					"patching_rect": [
+						700.0,
+						200.0,
+						90.0,
+						20.0
+					],
+					"text": "session",
+					"presentation": 1,
+					"presentation_rect": [
+						510.0,
+						40.0,
+						90.0,
+						18.0
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-session-menu",
+					"maxclass": "umenu",
+					"numinlets": 1,
+					"numoutlets": 3,
+					"outlettype": [
+						"int",
+						"",
+						""
+					],
+					"parameter_enable": 0,
+					"patching_rect": [
+						700.0,
+						226.0,
+						120.0,
+						22.0
+					],
+					"items": [
+						"auto",
+						",",
+						"stateless",
+						",",
+						"session"
+					],
+					"presentation": 1,
+					"presentation_rect": [
+						510.0,
+						60.0,
+						110.0,
+						22.0
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-prepend-session",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"outlettype": [
+						""
+					],
+					"patching_rect": [
+						700.0,
+						256.0,
+						105.0,
+						22.0
+					],
+					"text": "prepend session"
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-btn-reset-session",
+					"maxclass": "textbutton",
+					"numinlets": 1,
+					"numoutlets": 3,
+					"outlettype": [
+						"",
+						"",
+						""
+					],
+					"parameter_enable": 0,
+					"patching_rect": [
+						830.0,
+						226.0,
+						90.0,
+						22.0
+					],
+					"text": "reset session",
+					"presentation": 1,
+					"presentation_rect": [
+						510.0,
+						88.0,
+						110.0,
+						22.0
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-msg-reset-session",
+					"maxclass": "message",
+					"numinlets": 2,
+					"numoutlets": 1,
+					"outlettype": [
+						""
+					],
+					"patching_rect": [
+						830.0,
+						256.0,
+						90.0,
+						22.0
+					],
+					"text": "reset_session"
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-session-disp-label",
+					"maxclass": "comment",
+					"numinlets": 1,
+					"numoutlets": 0,
+					"patching_rect": [
+						700.0,
+						286.0,
+						90.0,
+						20.0
+					],
+					"text": "session",
+					"presentation": 1,
+					"presentation_rect": [
+						510.0,
+						116.0,
+						90.0,
+						16.0
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-session-disp",
+					"maxclass": "message",
+					"numinlets": 2,
+					"numoutlets": 1,
+					"outlettype": [
+						""
+					],
+					"patching_rect": [
+						700.0,
+						312.0,
+						120.0,
+						22.0
+					],
+					"text": "set stateless 0",
+					"presentation": 1,
+					"presentation_rect": [
+						510.0,
+						134.0,
+						110.0,
+						20.0
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-spice-label",
+					"maxclass": "comment",
+					"numinlets": 1,
+					"numoutlets": 0,
+					"patching_rect": [
+						960.0,
+						200.0,
+						160.0,
+						20.0
+					],
+					"text": "SPICE  ·  temperature",
+					"presentation": 1,
+					"presentation_rect": [
+						510.0,
+						162.0,
+						120.0,
+						18.0
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-dial-spice",
+					"maxclass": "live.dial",
+					"numinlets": 1,
+					"numoutlets": 2,
+					"outlettype": [
+						"",
+						"float"
+					],
+					"parameter_enable": 1,
+					"patching_rect": [
+						960.0,
+						226.0,
+						44.0,
+						48.0
+					],
+					"presentation": 1,
+					"presentation_rect": [
+						516.0,
+						182.0,
+						46.0,
+						52.0
+					],
+					"saved_attribute_attributes": {
+						"valueof": {
+							"parameter_longname": "Spice",
+							"parameter_shortname": "Spice",
+							"parameter_type": 0,
+							"parameter_mmin": 0.0,
+							"parameter_mmax": 1.0,
+							"parameter_unitstyle": 1,
+							"parameter_modmode": 0,
+							"parameter_initial_enable": 1,
+							"parameter_initial": [
+								0.5
+							]
+						}
+					},
+					"varname": "Spice"
+				}
+			},
+			{
+				"box": {
+					"id": "obj-seq-prepend-spice",
+					"maxclass": "newobj",
+					"numinlets": 1,
+					"numoutlets": 1,
+					"outlettype": [
+						""
+					],
+					"patching_rect": [
+						960.0,
+						280.0,
+						90.0,
+						22.0
+					],
+					"text": "prepend spice"
+				}
 			}
 		],
 		"lines": [
@@ -3532,6 +3782,90 @@
 					],
 					"destination": [
 						"obj-seq-model-disp",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-seq-session-menu",
+						1
+					],
+					"destination": [
+						"obj-seq-prepend-session",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-seq-prepend-session",
+						0
+					],
+					"destination": [
+						"obj-node",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-seq-btn-reset-session",
+						0
+					],
+					"destination": [
+						"obj-seq-msg-reset-session",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-seq-msg-reset-session",
+						0
+					],
+					"destination": [
+						"obj-node",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-seq-dial-spice",
+						0
+					],
+					"destination": [
+						"obj-seq-prepend-spice",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-seq-prepend-spice",
+						0
+					],
+					"destination": [
+						"obj-node",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-route",
+						9
+					],
+					"destination": [
+						"obj-seq-session-disp",
 						0
 					]
 				}
